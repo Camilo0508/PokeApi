@@ -2,18 +2,23 @@ import * as db from './database.js';
 import { fetchImage, fetchNames, fetchPokemon, PokemonNotFound } from './pokeapiClient.js';
 
 async function downloadAndSave(nameOrId) {
-  const { pokemon, imageUrl } = await fetchPokemon(nameOrId);
+  const { pokemon, imageUrls } = await fetchPokemon(nameOrId);
+  db.savePokemon(pokemon);
 
-  let image = null;
-  let imageType = null;
-  if (imageUrl && !db.hasImage(pokemon.id)) {
-    try {
-      ({ buffer: image, type: imageType } = await fetchImage(imageUrl));
-    } catch {
-    }
-  }
+  // Se descarga cada imagen que falte y se guarda en la base con su posición
+  const guardadas = db.imagePositions(pokemon.id);
+  await Promise.all(
+    imageUrls.map(async (url, posicion) => {
+      if (!url || guardadas.includes(posicion)) return;
+      try {
+        const { buffer, type } = await fetchImage(url);
+        db.saveImage(pokemon.id, posicion, buffer, type);
+      } catch {
+        // sin imagen no es grave, se guardan igual los datos
+      }
+    })
+  );
 
-  db.savePokemon(pokemon, image, imageType);
   return pokemon;
 }
 

@@ -18,9 +18,15 @@ export async function fetchPokemon(nameOrId) {
       name: data.name,
       height: data.height,
       weight: data.weight,
-      moves: data.moves.slice(0, MAX_MOVES).map((m) => m.move.name),
+      moves: data.moves.map((m) => m.move.name),
+      abilities: data.abilities.map((a) => a.ability.name),
     },
-    imageUrl: data.sprites.other.showdown.front_default ?? data.sprites.front_default,
+    // Tres imágenes del mismo pokémon: gif animado, artwork oficial y sprite clásico
+    imageUrls: [
+      data.sprites.other.showdown.front_default,
+      data.sprites.other['official-artwork'].front_default,
+      data.sprites.front_default,
+    ],
   };
 }
 

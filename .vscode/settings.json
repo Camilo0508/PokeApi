@@ -1,0 +1,26 @@
+{
+  // --- Sugerencias de codigo: APAGADAS ---
+  "editor.quickSuggestions": {
+    "other": false,
+    "comments": false,
+    "strings": false
+  },
+  "editor.suggestOnTriggerCharacters": false,
+  "editor.wordBasedSuggestions": "off",
+  "editor.parameterHints.enabled": false,
+  "editor.snippetSuggestions": "none",
+
+  // Nada se acepta solo con Enter o con un punto
+  "editor.acceptSuggestionOnEnter": "off",
+  "editor.acceptSuggestionOnCommitCharacter": false,
+  "editor.tabCompletion": "off",
+
+  // Sugerencias inline tipo IA (por si instalas Copilot mas adelante)
+  "editor.inlineSuggest.enabled": false,
+
+  // --- Auto-cierre de llaves, comillas y etiquetas: ACTIVO ---
+  "editor.autoClosingBrackets": "languageDefined",
+  "editor.autoClosingQuotes": "languageDefined",
+  "javascript.autoClosingTags": true,
+  "typescript.autoClosingTags": true
+}
