@@ -1,0 +1,27 @@
+# Infraestructura en Render: los dos microservicios del proyecto.
+# Las cadenas de conexión (DATABASE_URL y MONGODB_URI) se escriben en el panel
+# de Render, NO en este archivo, porque son secretas.
+services:
+  - type: web
+    name: pokemon-service
+    runtime: node
+    plan: free
+    rootDir: backend
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+
+  - type: web
+    name: onepiece-service
+    runtime: python
+    plan: free
+    rootDir: backend-onepiece
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    envVars:
+      - key: MONGODB_URI
+        sync: false
+      - key: MONGODB_DB
+        value: onepiece

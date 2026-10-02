@@ -1,4 +1,4 @@
-import { MAX_MOVES, POKEAPI_URL, TIMEOUT_MS } from './config.js';
+import { POKEAPI_URL, TIMEOUT_MS } from './config.js';
 
 export class PokemonNotFound extends Error {}
 

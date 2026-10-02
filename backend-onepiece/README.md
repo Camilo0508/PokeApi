@@ -1,22 +1,40 @@
-# Microservicio One Piece (Node + Express + SQLite)
+# Microservicio One Piece — Python + FastAPI + MongoDB
 
-Segundo microservicio del proyecto. Corre en el **puerto 8001**, aparte del de
-pokémon (8000). Si hay internet consulta https://www.onepieceapi.com y guarda los
-personajes y sus imágenes en `onepiece.db`; si no hay internet, responde con lo guardado.
+Microservicio **no relacional** del proyecto. Cada personaje es un documento de
+MongoDB, con sus hakis y su imagen dentro del mismo documento.
 
-## Ejecutar
+El otro microservicio (Pokémon) está en `../backend`: Node + Express + PostgreSQL.
+
+## Ejecutar en local
 ```bash
-npm install
-npm run dev
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env          # ajusta MONGODB_URI si hace falta
+uvicorn app.main:app --reload --port 8001
+```
+Documentación interactiva: http://localhost:8001/docs
+
+## Cargar personajes desde la consola
+```bash
+python -m app.seed                 # carga 10
+python -m app.seed --limit 25      # carga 25
+python -m app.seed --page 2        # la siguiente página
 ```
 
 ## Endpoints
-| Método | Ruta                          | Descripción                     |
-|--------|-------------------------------|---------------------------------|
-| GET    | `/characters?limit=20&page=1` | Lista paginada                  |
-| GET    | `/characters?q=luffy`         | Búsqueda por nombre             |
-| GET    | `/characters/{id}`            | Un personaje                    |
-| GET    | `/images/{id}`                | Imagen guardada                 |
-| GET    | `/health`                     | ¿Hay internet? ¿Cuántos guardados? |
+| Método | Ruta                          | Descripción                        |
+|--------|-------------------------------|------------------------------------|
+| GET    | `/characters?limit=20&page=1` | Lista paginada                     |
+| GET    | `/characters?q=luffy`         | Búsqueda por nombre                |
+| GET    | `/characters/{id}`            | Un personaje                       |
+| GET    | `/images/{id}`                | Imagen guardada en MongoDB         |
+| GET    | `/health`                     | Internet, cuántos guardados, base  |
+| GET    | `/docs`                       | Swagger: documentación y pruebas   |
+| GET    | `/openapi.json`               | Especificación OpenAPI en JSON     |
 
-Cada respuesta trae `"source": "api"` o `"source": "local"`.
+`"source": "local"` = salió de MongoDB · `"api"` = se acabó de traer de la API externa.
+
+## Fuentes de datos
+- `onepieceapi.com`: nombre, imagen, recompensa, edad, estatura, cumpleaños.
+- `api-onepiece.com`: tripulación, fruta del diablo, trabajo y hakis (se cruzan por nombre).
