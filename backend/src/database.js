@@ -10,12 +10,24 @@ import pg from 'pg';
 
 import { DATABASE_URL } from './config.js';
 
-// En Neon/Render la conexión es por SSL; en local (Docker) no
-const enLaNube = !DATABASE_URL.includes('localhost');
+/**
+ * ¿Hace falta SSL?
+ *   - En local (Docker) no.
+ *   - Dentro de Render, con la dirección interna (dpg-xxxx, sin punto), tampoco.
+ *   - Desde fuera (dirección externa de Render o Neon), sí.
+ */
+function necesitaSsl(url) {
+  try {
+    const host = new URL(url).hostname;
+    return host !== 'localhost' && host !== '127.0.0.1' && host.includes('.');
+  } catch {
+    return false;
+  }
+}
 
 export const pool = new pg.Pool({
   connectionString: DATABASE_URL,
-  ssl: enLaNube ? { rejectUnauthorized: false } : false,
+  ssl: necesitaSsl(DATABASE_URL) ? { rejectUnauthorized: false } : false,
 });
 
 export async function initDb() {

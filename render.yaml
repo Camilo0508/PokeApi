@@ -1,6 +1,17 @@
-# Infraestructura en Render: los dos microservicios del proyecto.
-# Las cadenas de conexión (DATABASE_URL y MONGODB_URI) se escriben en el panel
-# de Render, NO en este archivo, porque son secretas.
+# Infraestructura en Render: los dos microservicios y la base relacional.
+#
+#   pokemon-service   Node + Express  ->  PostgreSQL (la crea Render, abajo)
+#   onepiece-service  Python/FastAPI  ->  MongoDB Atlas (MONGODB_URI se pone en el panel)
+#
+# Render no tiene MongoDB gestionado, por eso esa va en Atlas.
+
+databases:
+  # OJO: la base gratis de Render se borra a los 30 días de creada
+  - name: pokeapi-db
+    plan: free
+    databaseName: pokeapi
+    user: pokeapi
+
 services:
   - type: web
     name: pokemon-service
@@ -10,8 +21,11 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
+      # Render conecta sola la base de arriba con el servicio
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: pokeapi-db
+          property: connectionString
 
   - type: web
     name: onepiece-service
@@ -19,8 +33,9 @@ services:
     plan: free
     rootDir: backend-onepiece
     buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers --forwarded-allow-ips='*'
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
     envVars:
+      # Esta se escribe a mano en el panel de Render (es secreta): la de MongoDB Atlas
       - key: MONGODB_URI
         sync: false
       - key: MONGODB_DB

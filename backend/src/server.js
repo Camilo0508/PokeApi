@@ -72,9 +72,25 @@ app.use((error, req, res, _next) => {
   res.status(500).json({ detail: error.message });
 });
 
-await db.initDb(); // crea las tablas si no existen
-
+// El servidor arranca de una vez: si la base todavía no responde (pasa en Render
+// cuando apenas se está creando), se reintenta en segundo plano en vez de caerse.
 app.listen(PORT, () => {
-  console.log(`Backend Pokémon (PostgreSQL) en http://localhost:${PORT}`);
-  console.log(`Swagger en http://localhost:${PORT}/docs`);
+  console.log(`Backend Pokémon (PostgreSQL) escuchando en el puerto ${PORT}`);
+  console.log(`Swagger en /docs`);
 });
+
+async function prepararBase(intentos = 10) {
+  for (let i = 1; i <= intentos; i++) {
+    try {
+      await db.initDb(); // crea las tablas si no existen
+      console.log('Tablas listas en PostgreSQL');
+      return;
+    } catch (error) {
+      console.error(`Intento ${i}/${intentos} de conectar a PostgreSQL falló: ${error.message}`);
+      await new Promise((listo) => setTimeout(listo, 5000));
+    }
+  }
+  console.error('No se pudo conectar a PostgreSQL. Revisa la variable DATABASE_URL.');
+}
+
+prepararBase();
