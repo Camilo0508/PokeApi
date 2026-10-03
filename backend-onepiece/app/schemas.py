@@ -3,6 +3,7 @@ from typing import Literal
 
 from pydantic import BaseModel
 
+# Siempre "local": los datos salen de MongoDB. "api" queda por compatibilidad.
 Source = Literal["api", "local"]
 
 

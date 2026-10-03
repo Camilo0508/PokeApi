@@ -33,8 +33,12 @@ python -m app.seed --page 2        # la siguiente página
 | GET    | `/docs`                       | Swagger: documentación y pruebas   |
 | GET    | `/openapi.json`               | Especificación OpenAPI en JSON     |
 
-`"source": "local"` = salió de MongoDB · `"api"` = se acabó de traer de la API externa.
+Las consultas se responden **solo con lo que hay en MongoDB**: el servicio no consulta las
+APIs de One Piece. Si un personaje no está guardado, la búsqueda sale vacía y el detalle
+responde 404. Los datos entran con `python -m app.seed` o insertándolos a mano en la base.
 
-## Fuentes de datos
+`"source": "local"` = salió de MongoDB.
+
+## Fuentes de datos (solo se usan al cargar con `seed`)
 - `onepieceapi.com`: nombre, imagen, recompensa, edad, estatura, cumpleaños.
 - `api-onepiece.com`: tripulación, fruta del diablo, trabajo y hakis (se cruzan por nombre).

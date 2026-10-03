@@ -10,9 +10,14 @@ from .schemas import CharacterListResponse, CharacterResponse, ErrorResponse, He
 DESCRIPCION = """
 Microservicio en Python + FastAPI con MongoDB (base NO relacional).
 
-Primero responde con lo guardado en MongoDB; si no está, lo trae de la API externa y lo guarda.
+Las consultas se responden **únicamente con lo que hay en MongoDB**.
+El servicio no consulta las APIs de One Piece: si un personaje no está guardado,
+la búsqueda devuelve vacío y el detalle responde 404.
 
-`"source": "local"` = salió de MongoDB · `"api"` = se acabó de traer de la API externa.
+Los datos se cargan a propósito, desde la consola con `python -m app.seed`
+o insertándolos directamente en la base.
+
+`"source": "local"` = salió de MongoDB.
 """
 
 # Swagger queda en /docs y el JSON crudo en /openapi.json
@@ -21,7 +26,7 @@ app = FastAPI(
     description=DESCRIPCION,
     version="1.0.0",
     openapi_tags=[
-        {"name": "Personajes", "description": "Consulta y búsqueda de personajes"},
+        {"name": "Personajes", "description": "Consulta y búsqueda de los personajes guardados en MongoDB"},
         {"name": "Imágenes", "description": "Imágenes guardadas en MongoDB"},
         {"name": "Estado", "description": "Salud del servicio"},
     ],
@@ -52,7 +57,7 @@ def health():
 
 
 @app.get("/characters", response_model=CharacterListResponse, tags=["Personajes"],
-         summary="Lista paginada o búsqueda por nombre")
+         summary="Lista paginada o búsqueda por nombre, dentro de la base")
 async def list_characters(
     request: Request,
     limit: int = Query(20, ge=1, le=100, description="Cuántos traer (máximo 100)"),
@@ -69,9 +74,9 @@ async def list_characters(
 
 
 @app.get("/characters/{character_id}", response_model=CharacterResponse, tags=["Personajes"],
-         summary="Un personaje por id",
+         summary="Un personaje guardado, por id",
          responses={404: {"model": ErrorResponse,
-                          "description": "No existe, o no hay internet y no está guardado"}})
+                          "description": "No está guardado en la base de datos"}})
 async def get_character(
     request: Request,
     character_id: str = Path(description="Id del personaje", examples=["1"]),

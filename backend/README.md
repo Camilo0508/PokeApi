@@ -35,4 +35,8 @@ npm run seed -- --offset 10     # los 10 siguientes
 | GET    | `/docs`                       | Swagger: documentación y pruebas   |
 | GET    | `/openapi.json`               | Especificación OpenAPI en JSON     |
 
-`"source": "local"` = salió de PostgreSQL · `"api"` = se acabó de traer de la PokeAPI.
+Las consultas se responden **solo con lo que hay en PostgreSQL**: el servicio no consulta
+la PokeAPI. Si un pokémon no está guardado, responde 404 "Este pokémon no se encuentra en
+la base de datos". Los datos entran con `npm run seed` o insertándolos a mano en la base.
+
+`"source": "local"` = salió de PostgreSQL.

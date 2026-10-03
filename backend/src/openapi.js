@@ -9,13 +9,16 @@ export const openapi = {
     version: '1.0.0',
     description:
       'Microservicio en Node + Express con PostgreSQL (base relacional).\n\n' +
-      'Primero responde con lo guardado en PostgreSQL; si no está, lo trae de la PokeAPI y lo guarda.\n\n' +
-      '`"source": "local"` = salió de PostgreSQL · `"api"` = se acabó de traer de la PokeAPI.',
+      'Las consultas se responden **únicamente con lo que hay en PostgreSQL**. ' +
+      'El servicio no consulta la PokeAPI: si un pokémon no está guardado, responde 404.\n\n' +
+      'Los datos se cargan a propósito, desde la consola con `npm run seed` ' +
+      'o insertándolos directamente en la base.\n\n' +
+      '`"source": "local"` = salió de PostgreSQL.',
   },
   // URL relativa: "Try it out" funciona igual en local y en Render
   servers: [{ url: '/' }],
   tags: [
-    { name: 'Pokémon', description: 'Consulta de pokémon' },
+    { name: 'Pokémon', description: 'Consulta de los pokémon guardados en PostgreSQL' },
     { name: 'Imágenes', description: 'Imágenes guardadas en PostgreSQL' },
     { name: 'Estado', description: 'Salud del servicio' },
   ],
@@ -23,7 +26,7 @@ export const openapi = {
     '/pokemon': {
       get: {
         tags: ['Pokémon'],
-        summary: 'Lista paginada de pokémon',
+        summary: 'Lista paginada de los pokémon guardados en la base',
         parameters: [
           {
             name: 'limit',
@@ -50,7 +53,7 @@ export const openapi = {
     '/pokemon/{name}': {
       get: {
         tags: ['Pokémon'],
-        summary: 'Un pokémon por nombre o id',
+        summary: 'Un pokémon guardado, por nombre o id',
         parameters: [
           {
             name: 'name',
@@ -66,11 +69,11 @@ export const openapi = {
             content: { 'application/json': { schema: { $ref: '#/components/schemas/PokemonResponse' } } },
           },
           404: {
-            description: 'No existe, o no hay internet y no está guardado',
+            description: 'No está guardado en la base de datos',
             content: {
               'application/json': {
                 schema: { $ref: '#/components/schemas/Error' },
-                example: { detail: 'Pokémon no encontrado' },
+                example: { detail: 'Este pokémon no se encuentra en la base de datos' },
               },
             },
           },
@@ -121,7 +124,7 @@ export const openapi = {
     '/health': {
       get: {
         tags: ['Estado'],
-        summary: 'Internet, cuántos guardados y estado de la base',
+        summary: 'Cuántos pokémon hay guardados y estado de la base',
         responses: {
           200: {
             description: 'Estado del servicio',
@@ -135,8 +138,8 @@ export const openapi = {
     schemas: {
       Source: {
         type: 'string',
-        enum: ['local', 'api'],
-        description: 'local = PostgreSQL · api = PokeAPI',
+        enum: ['local'],
+        description: 'Siempre "local": los datos salen de PostgreSQL',
       },
       Pokemon: {
         type: 'object',
@@ -172,8 +175,8 @@ export const openapi = {
       Health: {
         type: 'object',
         properties: {
-          internet: { type: 'boolean' },
-          saved_pokemon: { type: 'integer' },
+          internet: { type: 'boolean', description: 'Se deja por compatibilidad; siempre true' },
+          saved_pokemon: { type: 'integer', description: 'Cuántos hay en la base' },
           database: { type: 'string', example: 'PostgreSQL' },
         },
       },
