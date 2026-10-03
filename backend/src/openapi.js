@@ -150,6 +150,7 @@ export const openapi = {
           weight: { type: 'integer', description: 'En hectogramos', example: 60 },
           moves: { type: 'array', items: { type: 'string' }, example: ['mega-punch', 'pay-day'] },
           abilities: { type: 'array', items: { type: 'string' }, example: ['static', 'lightning-rod'] },
+          types: { type: 'array', items: { type: 'string' }, example: ['fire', 'flying'] },
           images: {
             type: 'array',
             description: '[gif animado, artwork oficial, sprite clásico]',

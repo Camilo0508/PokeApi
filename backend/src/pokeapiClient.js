@@ -20,6 +20,7 @@ export async function fetchPokemon(nameOrId) {
       weight: data.weight,
       moves: data.moves.map((m) => m.move.name),
       abilities: data.abilities.map((a) => a.ability.name),
+      types: data.types.map((t) => t.type.name), // fuego, planta, agua...
     },
     // Tres imágenes del mismo pokémon: gif animado, artwork oficial y sprite clásico
     imageUrls: [

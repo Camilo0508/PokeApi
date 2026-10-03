@@ -53,6 +53,13 @@ export async function initDb() {
       PRIMARY KEY (pokemon_id, posicion)
     );
 
+    CREATE TABLE IF NOT EXISTS pokemon_type (
+      pokemon_id INTEGER NOT NULL REFERENCES pokemon(id) ON DELETE CASCADE,
+      posicion   INTEGER NOT NULL,
+      name       TEXT NOT NULL,
+      PRIMARY KEY (pokemon_id, posicion)
+    );
+
     CREATE TABLE IF NOT EXISTS pokemon_image (
       pokemon_id INTEGER NOT NULL REFERENCES pokemon(id) ON DELETE CASCADE,
       posicion   INTEGER NOT NULL,
@@ -80,6 +87,14 @@ export async function savePokemon(pokemon) {
     for (const [posicion, name] of pokemon.moves.entries()) {
       await cliente.query(
         'INSERT INTO pokemon_move (pokemon_id, posicion, name) VALUES ($1, $2, $3)',
+        [pokemon.id, posicion, name]
+      );
+    }
+
+    await cliente.query('DELETE FROM pokemon_type WHERE pokemon_id = $1', [pokemon.id]);
+    for (const [posicion, name] of (pokemon.types ?? []).entries()) {
+      await cliente.query(
+        'INSERT INTO pokemon_type (pokemon_id, posicion, name) VALUES ($1, $2, $3)',
         [pokemon.id, posicion, name]
       );
     }
@@ -124,7 +139,9 @@ const CONSULTA = `
     COALESCE((SELECT array_agg(m.name ORDER BY m.posicion)
               FROM pokemon_move m WHERE m.pokemon_id = p.id), '{}') AS moves,
     COALESCE((SELECT array_agg(a.name ORDER BY a.posicion)
-              FROM pokemon_ability a WHERE a.pokemon_id = p.id), '{}') AS abilities
+              FROM pokemon_ability a WHERE a.pokemon_id = p.id), '{}') AS abilities,
+    COALESCE((SELECT array_agg(t.name ORDER BY t.posicion)
+              FROM pokemon_type t WHERE t.pokemon_id = p.id), '{}') AS types
   FROM pokemon p
 `;
 
