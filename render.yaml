@@ -1,7 +1,8 @@
 # Infraestructura en Render: los dos microservicios y la base relacional.
 #
-#   pokemon-service   Node + Express  ->  PostgreSQL (la crea Render, abajo)
-#   onepiece-service  Python/FastAPI  ->  MongoDB Atlas (MONGODB_URI se pone en el panel)
+#   pokemon-service   Node + Express        ->  PostgreSQL (la crea Render, abajo)
+#   profesor-service  Node sin Express      ->  PostgreSQL (la misma base, tabla "docente")
+#   onepiece-service  Python/FastAPI        ->  MongoDB Atlas (MONGODB_URI se pone en el panel)
 #
 # Render no tiene MongoDB gestionado, por eso esa va en Atlas.
 
@@ -22,6 +23,19 @@ services:
     startCommand: npm start
     envVars:
       # Render conecta sola la base de arriba con el servicio
+      - key: DATABASE_URL
+        fromDatabase:
+          name: pokeapi-db
+          property: connectionString
+
+  - type: web
+    name: profesor-service
+    runtime: node
+    plan: free
+    rootDir: backend-profesor
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
       - key: DATABASE_URL
         fromDatabase:
           name: pokeapi-db

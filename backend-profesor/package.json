@@ -1,0 +1,14 @@
+{
+  "name": "backend-profesor",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "node --watch --env-file-if-exists=.env src/server.js",
+    "seed": "node --env-file-if-exists=.env src/seed.js"
+  },
+  "dependencies": {
+    "pg": "^8.23.1"
+  }
+}
