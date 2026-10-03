@@ -1,11 +1,17 @@
 """Microservicio de One Piece: Python + FastAPI + MongoDB (base NO relacional)."""
-from fastapi import FastAPI, HTTPException, Path, Query, Request, Response
+from fastapi import FastAPI, File, HTTPException, Path, Query, Request, Response, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import RedirectResponse
 
 from . import database as db
 from . import repository
-from .schemas import CharacterListResponse, CharacterResponse, ErrorResponse, HealthResponse
+from .schemas import (
+    CharacterListResponse,
+    CharacterNuevo,
+    CharacterResponse,
+    ErrorResponse,
+    HealthResponse,
+)
 
 DESCRIPCION = """
 Microservicio en Python + FastAPI con MongoDB (base NO relacional).
@@ -28,6 +34,7 @@ app = FastAPI(
     openapi_tags=[
         {"name": "Personajes", "description": "Consulta y búsqueda de los personajes guardados en MongoDB"},
         {"name": "Imágenes", "description": "Imágenes guardadas en MongoDB"},
+        {"name": "Alta manual", "description": "Insertar personajes e imágenes a mano, sin las APIs externas"},
         {"name": "Estado", "description": "Salud del servicio"},
     ],
 )
@@ -87,6 +94,46 @@ async def get_character(
             status_code=404, detail="Este personaje no se encuentra en la base de datos"
         )
     return CharacterResponse(source=source, character=con_imagen(personaje, request))
+
+
+@app.post(
+    "/characters",
+    response_model=CharacterResponse,
+    status_code=201,
+    tags=["Alta manual"],
+    summary="Insertar un personaje a mano",
+    description=(
+        "Guarda el personaje en MongoDB. Si el id ya existe, lo actualiza.\n\n"
+        "La imagen se sube aparte, con PUT /characters/{id}/image."
+    ),
+)
+def crear_character(nuevo: CharacterNuevo, request: Request):
+    personaje = nuevo.model_dump()
+    db.save_character(personaje)
+    guardado = db.get_character(personaje["id"])
+    return CharacterResponse(source="local", character=con_imagen(guardado, request))
+
+
+@app.put(
+    "/characters/{character_id}/image",
+    tags=["Alta manual"],
+    summary="Subir la imagen de un personaje",
+    description="El personaje debe existir antes (POST /characters).",
+    responses={404: {"model": ErrorResponse, "description": "El personaje no existe todavía"}},
+)
+async def subir_imagen(
+    character_id: str = Path(description="Id del personaje"),
+    archivo: UploadFile = File(description="Archivo de imagen (png, jpg, webp, gif)"),
+):
+    if db.get_character(character_id) is None:
+        raise HTTPException(status_code=404, detail="Primero crea el personaje con POST /characters")
+
+    contenido = await archivo.read()
+    if not contenido:
+        raise HTTPException(status_code=400, detail="El archivo llegó vacío")
+
+    db.save_image(character_id, contenido, archivo.content_type or "image/png")
+    return {"detail": "Imagen guardada", "bytes": len(contenido)}
 
 
 @app.get("/images/{character_id}", tags=["Imágenes"], summary="Imagen de un personaje",

@@ -3,3 +3,4 @@ uvicorn[standard]
 httpx
 pymongo
 python-dotenv
+python-multipart

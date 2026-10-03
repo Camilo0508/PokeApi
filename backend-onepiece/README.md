@@ -29,9 +29,14 @@ python -m app.seed --page 2        # la siguiente página
 | GET    | `/characters?q=luffy`         | Búsqueda por nombre                |
 | GET    | `/characters/{id}`            | Un personaje                       |
 | GET    | `/images/{id}`                | Imagen guardada en MongoDB         |
+| POST   | `/characters`                 | **Insertar un personaje a mano**   |
+| PUT    | `/characters/{id}/image`      | **Subir su imagen a mano**         |
 | GET    | `/health`                     | Internet, cuántos guardados, base  |
 | GET    | `/docs`                       | Swagger: documentación y pruebas   |
 | GET    | `/openapi.json`               | Especificación OpenAPI en JSON     |
+
+Para insertar a mano, lo más cómodo es abrir `/docs` (Swagger), usar `POST /characters`
+con el JSON del personaje y después `PUT /characters/{id}/image` para subir la foto.
 
 Las consultas se responden **solo con lo que hay en MongoDB**: el servicio no consulta las
 APIs de One Piece. Si un personaje no está guardado, la búsqueda sale vacía y el detalle

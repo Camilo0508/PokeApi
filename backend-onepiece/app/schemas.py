@@ -30,6 +30,26 @@ class Character(BaseModel):
     image: str = ""
 
 
+class CharacterNuevo(BaseModel):
+    """Lo que se envía para dar de alta un personaje a mano."""
+
+    id: str                       # identificador propio, ej: "sanji-001"
+    name: str
+    japones: str | None = None
+    age: int | None = None
+    height: int | None = None     # en centímetros
+    status: str | None = None     # Alive, Deceased...
+    blood_type: str | None = None
+    birthday: str | None = None
+    bounty: int | None = None     # recompensa en berries
+    crew: str | None = None       # tripulación
+    fruit: str | None = None      # fruta del diablo
+    fruit_type: str | None = None  # Paramecia, Zoan, Logia...
+    job: str | None = None
+    haki: list[Haki] = []
+    orden: int | None = None      # puesto en la lista; si es null va al final
+
+
 class CharacterListResponse(BaseModel):
     source: Source
     results: list[Character]
