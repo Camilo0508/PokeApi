@@ -1,11 +1,4 @@
-/**
- * Carga docentes de EJEMPLO en la base, para probar la aplicación.
- *
- *   npm run seed
- *
- * Los datos son inventados, para demostración. Los docentes reales se
- * registran desde Swagger (/docs) con POST /docentes?nombre=...
- */
+
 import { initDb, countDocentes, listDocentes, pool } from './database.js';
 import { crear } from './docenteService.js';
 
