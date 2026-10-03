@@ -26,7 +26,7 @@ function withImages(req, p) {
 
 app.get('/health', async (req, res) => {
   res.json({
-    internet: await repository.hasInternet(),
+    internet: true,
     saved_pokemon: await db.countPokemon(),
     database: (await db.ping()) ? 'PostgreSQL' : 'sin conexión',
   });
@@ -47,8 +47,7 @@ app.get('/pokemon/:name', async (req, res, next) => {
   try {
     const { pokemon, source } = await repository.getPokemon(req.params.name);
     if (!pokemon) {
-      const detail = source === 'api' ? 'Pokémon no encontrado' : 'Sin internet y no está guardado';
-      return res.status(404).json({ detail });
+      return res.status(404).json({ detail: 'Este pokémon no se encuentra en la base de datos' });
     }
     res.json({ source, pokemon: withImages(req, pokemon) });
   } catch (error) {

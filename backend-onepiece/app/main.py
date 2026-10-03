@@ -42,10 +42,10 @@ def inicio():
 
 
 @app.get("/health", response_model=HealthResponse, tags=["Estado"],
-         summary="Internet, cuántos guardados y estado de la base")
-async def health():
+         summary="Cuántos personajes hay guardados y estado de la base")
+def health():
     return HealthResponse(
-        internet=await repository.hay_internet(),
+        internet=True,
         saved_characters=db.count_characters(),
         database="MongoDB" if db.ping() else "sin conexión",
     )
@@ -61,9 +61,9 @@ async def list_characters(
 ):
     texto = q.strip()
     if texto:
-        results, source = await repository.search_characters(texto, limit)
+        results, source = repository.search_characters(texto, limit)
     else:
-        results, source = await repository.list_characters(limit, page)
+        results, source = repository.list_characters(limit, page)
 
     return CharacterListResponse(source=source, results=[con_imagen(p, request) for p in results])
 
@@ -76,10 +76,11 @@ async def get_character(
     request: Request,
     character_id: str = Path(description="Id del personaje", examples=["1"]),
 ):
-    personaje, source = await repository.get_character(character_id)
+    personaje, source = repository.get_character(character_id)
     if personaje is None:
-        detalle = "Personaje no encontrado" if source == "api" else "Sin internet y no está guardado"
-        raise HTTPException(status_code=404, detail=detalle)
+        raise HTTPException(
+            status_code=404, detail="Este personaje no se encuentra en la base de datos"
+        )
     return CharacterResponse(source=source, character=con_imagen(personaje, request))
 
 

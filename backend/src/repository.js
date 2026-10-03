@@ -1,20 +1,32 @@
 /**
- * Repositorio: decide de dónde salen los datos.
+ * Repositorio: los datos salen ÚNICAMENTE de PostgreSQL.
  *
- * La base de datos (PostgreSQL) es la fuente principal:
- *   1. Se responde con lo que hay guardado.
- *   2. Si no hay nada guardado y hay internet, se trae de la PokeAPI y se guarda.
+ * El servicio NO consulta la PokeAPI por su cuenta. Si un pokémon no está
+ * guardado, se responde que no está en la base de datos.
  *
- * La carga inicial se hace desde la consola con:  npm run seed
+ * Los datos se cargan a propósito, con el comando:  npm run seed
+ * (o insertándolos a mano en la base).
  */
 import * as db from './database.js';
-import { fetchImage, fetchNames, fetchPokemon, PokemonNotFound } from './pokeapiClient.js';
+import { fetchImage, fetchNames, fetchPokemon } from './pokeapiClient.js';
+
+// ---------- Consultas: solo base de datos ----------
+
+export async function listPokemon(limit, offset) {
+  return { results: await db.listPokemon(limit, offset), source: 'local' };
+}
+
+export async function getPokemon(nameOrId) {
+  const pokemon = await db.getPokemon(nameOrId.trim().toLowerCase());
+  return { pokemon, source: 'local' };
+}
+
+// ---------- Carga manual: solo la usa el comando seed ----------
 
 export async function guardar(nameOrId) {
   const { pokemon, imageUrls } = await fetchPokemon(nameOrId);
   await db.savePokemon(pokemon);
 
-  // Se descarga cada imagen que falte y se guarda con su posición
   const guardadas = await db.imagePositions(pokemon.id);
   await Promise.all(
     imageUrls.map(async (url, posicion) => {
@@ -31,41 +43,7 @@ export async function guardar(nameOrId) {
   return (await db.getPokemon(String(pokemon.id))) ?? pokemon;
 }
 
-// Descarga una página de la PokeAPI y la guarda. Lo usa el comando seed.
-export async function descargarPagina(limit, offset) {
-  const names = await fetchNames(limit, offset);
-  const resultados = [];
-  for (const name of names) {
-    resultados.push(await guardar(name)); // de a uno, para no saturar la PokeAPI
-  }
-  return resultados;
-}
-
-export async function listPokemon(limit, offset) {
-  const guardados = await db.listPokemon(limit, offset);
-  if (guardados.length > 0) return { results: guardados, source: 'local' };
-
-  try {
-    return { results: await descargarPagina(limit, offset), source: 'api' };
-  } catch {
-    return { results: [], source: 'local' };
-  }
-}
-
-export async function getPokemon(nameOrId) {
-  const texto = nameOrId.trim().toLowerCase();
-
-  const guardado = await db.getPokemon(texto);
-  if (guardado) return { pokemon: guardado, source: 'local' };
-
-  try {
-    return { pokemon: await guardar(texto), source: 'api' };
-  } catch (err) {
-    if (err instanceof PokemonNotFound) return { pokemon: null, source: 'api' };
-    return { pokemon: null, source: 'local' };
-  }
-}
-
+// Queda disponible por si se necesita, pero ya no se usa en las consultas
 export async function hasInternet() {
   try {
     await fetch('https://pokeapi.co', { method: 'HEAD', signal: AbortSignal.timeout(5000) });
@@ -73,4 +51,13 @@ export async function hasInternet() {
   } catch {
     return false;
   }
+}
+
+export async function descargarPagina(limit, offset) {
+  const names = await fetchNames(limit, offset);
+  const resultados = [];
+  for (const name of names) {
+    resultados.push(await guardar(name)); // de a uno, para no saturar la PokeAPI
+  }
+  return resultados;
 }
