@@ -27,17 +27,19 @@ export function validar(datos, { parcial = false } = {}) {
 
 /** Deja los datos listos y parejos antes de guardarlos */
 export function normalizar(datos) {
+  // Un campo que llega vacío ("") se guarda como null: así se puede borrar desde la app
+  const texto = (valor) => valor?.trim() || null;
   return {
     nombre: datos.nombre?.trim(),
-    profesion: datos.profesion?.trim() ?? null,
-    titulo: datos.titulo?.trim() ?? null,
+    profesion: texto(datos.profesion),
+    titulo: texto(datos.titulo),
     universidad: datos.universidad?.trim() || UNIVERSIDAD, // por defecto, Uninpahu
-    facultad: datos.facultad?.trim() ?? null,
-    cargo: datos.cargo?.trim() ?? null,
-    correo: datos.correo?.trim().toLowerCase() ?? null,
+    facultad: texto(datos.facultad),
+    cargo: texto(datos.cargo),
+    correo: texto(datos.correo)?.toLowerCase() ?? null,
     experiencia: datos.experiencia ?? null,
-    resumen: datos.resumen?.trim() ?? null,
-    foto: datos.foto?.trim() ?? null,
+    resumen: texto(datos.resumen),
+    foto: texto(datos.foto),
   };
 }
 

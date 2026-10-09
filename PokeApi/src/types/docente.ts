@@ -21,3 +21,6 @@ export interface DocenteResponse {
   source: string;
   docente: Docente;
 }
+
+// Lo que se manda al crear o editar (todo menos el id)
+export type DocenteDatos = Omit<Docente, 'id'>;

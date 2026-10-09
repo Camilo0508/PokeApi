@@ -1,10 +1,12 @@
 import { DOCENTES_API_URL } from '@/constants/config';
-import { Docente, DocenteListResponse, DocenteResponse } from '@/types/docente';
+import { Docente, DocenteDatos, DocenteListResponse, DocenteResponse } from '@/types/docente';
 
-async function request<T>(path: string): Promise<T> {
+type Metodo = 'GET' | 'POST' | 'PUT' | 'DELETE';
+
+async function request<T>(path: string, method: Metodo = 'GET'): Promise<T> {
   let res: Response;
   try {
-    res = await fetch(`${DOCENTES_API_URL}${path}`);
+    res = await fetch(`${DOCENTES_API_URL}${path}`, { method });
   } catch {
     throw new Error('No se pudo conectar con el microservicio de docentes.');
   }
@@ -25,4 +27,25 @@ export function getDocente(id: Docente['id']) {
 
 export function getDocentesHealth() {
   return request<{ servicio: string; database: string; saved_docentes: number }>('/health');
+}
+
+// ---------- CRUD: crear, editar y eliminar ----------
+
+/** Convierte los datos del formulario en "?nombre=...&cargo=..." */
+function aQuery(datos: DocenteDatos) {
+  return Object.entries(datos)
+    .map(([campo, valor]) => `${campo}=${encodeURIComponent(valor == null ? '' : String(valor))}`)
+    .join('&');
+}
+
+export function crearDocente(datos: DocenteDatos) {
+  return request<{ docente: Docente }>(`/docentes?${aQuery(datos)}`, 'POST');
+}
+
+export function actualizarDocente(id: Docente['id'], datos: DocenteDatos) {
+  return request<{ docente: Docente }>(`/docentes/${id}?${aQuery(datos)}`, 'PUT');
+}
+
+export function eliminarDocente(id: Docente['id']) {
+  return request<{ detail: string }>(`/docentes/${id}`, 'DELETE');
 }

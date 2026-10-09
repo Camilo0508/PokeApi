@@ -70,6 +70,11 @@ function Pestanas() {
         name="docente"
         options={{ title: 'Docente', href: null, headerLeft: () => <BotonVolver destino="/docentes" /> }}
       />
+      {/* Formulario para crear o editar un docente */}
+      <Tabs.Screen
+        name="docente-form"
+        options={{ title: 'Docente', href: null, headerLeft: () => <BotonVolver destino="/docentes" /> }}
+      />
     </Tabs>
   );
 }

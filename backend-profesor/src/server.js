@@ -53,9 +53,11 @@ function datosDesdeQuery(params) {
     if (params.has(campo)) datos[campo] = params.get(campo);
   }
   // experiencia viene como texto en la URL y debe quedar como número
+  // (vacía = null, para poder borrarla al editar)
   if (params.has('experiencia')) {
-    const anios = Number(params.get('experiencia'));
-    datos.experiencia = Number.isInteger(anios) ? anios : params.get('experiencia');
+    const texto = params.get('experiencia').trim();
+    const anios = Number(texto);
+    datos.experiencia = texto === '' ? null : Number.isInteger(anios) ? anios : texto;
   }
   return datos;
 }

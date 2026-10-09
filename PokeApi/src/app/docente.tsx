@@ -6,21 +6,29 @@ import { useRouter } from 'expo-router';
 import { ErrorMessage } from '@/components/error-message';
 import { useDocente } from '@/context/docente-context';
 import { useTheme } from '@/context/theme-context';
-import { getDocente } from '@/services/docentes-api';
+import { eliminarDocente, getDocente } from '@/services/docentes-api';
 import { Docente } from '@/types/docente';
+import { confirmar } from '@/utils/confirmar';
 
 const AZUL = '#2563EB';
+const ROJO = '#DC2626';
 
 export default function DocenteScreen() {
   // Llega por Context desde la lista...
-  const { selected } = useDocente();
+  const { selected, selectDocente, recargar } = useDocente();
   const { colors } = useTheme();
   const router = useRouter();
 
-  // ...y además se pide la ficha completa al microservicio (GET /docentes/{id})
-  const [docente, setDocente] = useState<Docente | null>(selected);
-  const [error, setError] = useState<string | null>(null);
-  const [loading, setLoading] = useState(!!selected);
+  // ...y además se pide la ficha completa al microservicio (GET /docentes/{id}).
+  // Cada respuesta se guarda junto con el docente que la pidió ("de"): así, si
+  // se elige otro o se edita, no se muestra por error la ficha anterior.
+  const [detalle, setDetalle] = useState<{ de: Docente; docente: Docente } | null>(null);
+  const [fallo, setFallo] = useState<{ de: Docente; mensaje: string } | null>(null);
+  const [borrando, setBorrando] = useState(false);
+
+  const docente = selected && detalle?.de === selected ? detalle.docente : selected;
+  const error = selected && fallo?.de === selected ? fallo.mensaje : null;
+  const loading = !!selected && detalle?.de !== selected && !error;
 
   useEffect(() => {
     if (!selected) return;
@@ -28,19 +36,42 @@ export default function DocenteScreen() {
 
     getDocente(selected.id)
       .then((data) => {
-        if (!cancelled) setDocente(data.docente);
+        if (!cancelled) setDetalle({ de: selected, docente: data.docente });
       })
       .catch((e: Error) => {
-        if (!cancelled) setError(e.message);
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
+        if (!cancelled) setFallo({ de: selected, mensaje: e.message });
       });
 
     return () => {
       cancelled = true;
     };
   }, [selected]);
+
+  // ---------- CRUD ----------
+
+  function editar(actual: Docente) {
+    router.push({ pathname: '/docente-form', params: { id: String(actual.id) } });
+  }
+
+  async function eliminar(actual: Docente) {
+    const seguro = await confirmar(
+      'Eliminar docente',
+      `¿Seguro que quieres eliminar a ${actual.nombre}? No se puede deshacer.`
+    );
+    if (!seguro) return;
+
+    setBorrando(true);
+    try {
+      await eliminarDocente(actual.id);
+      selectDocente(null);
+      recargar();
+      router.replace('/docentes');
+    } catch (e) {
+      setFallo({ de: actual, mensaje: (e as Error).message });
+    } finally {
+      setBorrando(false);
+    }
+  }
 
   if (!docente) {
     return (
@@ -114,9 +145,34 @@ export default function DocenteScreen() {
         </View>
       )}
 
+      {/* Editar (PUT /docentes/{id}) y eliminar (DELETE /docentes/{id}) */}
+      <View style={styles.filaAcciones}>
+        <Pressable
+          style={({ pressed }) => [
+            styles.botonAccion,
+            { borderColor: AZUL + '55', backgroundColor: AZUL + '1A', opacity: pressed ? 0.85 : 1 },
+          ]}
+          onPress={() => editar(docente)}>
+          <Text style={[styles.botonAccionTexto, { color: AZUL }]}>✏️ Editar</Text>
+        </Pressable>
+        <Pressable
+          disabled={borrando}
+          style={({ pressed }) => [
+            styles.botonAccion,
+            { borderColor: ROJO + '55', backgroundColor: ROJO + '12', opacity: pressed ? 0.85 : 1 },
+          ]}
+          onPress={() => eliminar(docente)}>
+          {borrando ? (
+            <ActivityIndicator color={ROJO} />
+          ) : (
+            <Text style={[styles.botonAccionTexto, { color: ROJO }]}>🗑️ Eliminar</Text>
+          )}
+        </Pressable>
+      </View>
+
       <Pressable
         style={({ pressed }) => [styles.boton, { backgroundColor: AZUL, opacity: pressed ? 0.85 : 1 }]}
-        onPress={() => router.back()}>
+        onPress={() => router.replace('/docentes')}>
         <Text style={styles.botonTexto}>Volver a la lista</Text>
       </Pressable>
     </ScrollView>
@@ -172,6 +228,9 @@ const styles = StyleSheet.create({
   resumen: { fontSize: 13, lineHeight: 20 },
 
   loader: { marginVertical: 8 },
+  filaAcciones: { flexDirection: 'row', gap: 10 },
+  botonAccion: { flex: 1, borderRadius: 14, borderWidth: 1, paddingVertical: 13, alignItems: 'center' },
+  botonAccionTexto: { fontWeight: '800' },
   boton: { borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   botonTexto: { color: '#fff', fontWeight: 'bold' },
 });

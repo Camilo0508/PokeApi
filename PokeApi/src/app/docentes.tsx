@@ -7,23 +7,27 @@ import { useRouter } from 'expo-router';
 import { ErrorMessage } from '@/components/error-message';
 import { useDocente } from '@/context/docente-context';
 import { useTheme } from '@/context/theme-context';
-import { getDocentes } from '@/services/docentes-api';
+import { eliminarDocente, getDocentes } from '@/services/docentes-api';
 import { Docente } from '@/types/docente';
+import { confirmar } from '@/utils/confirmar';
 
 const AZUL = '#2563EB'; // el color institucional de esta sección
+const ROJO = '#DC2626'; // para eliminar
 
 export default function DocentesScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { selectDocente } = useDocente();
+  const { selectDocente, version, recargar } = useDocente();
 
   const [query, setQuery] = useState('');
   const [buscado, setBuscado] = useState('');
   const [docentes, setDocentes] = useState<Docente[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [borrando, setBorrando] = useState<number | null>(null);
 
   // Se consulta al microservicio cada vez que cambia la búsqueda
+  // o que se crea, edita o elimina un docente (version: se recarga sin spinner)
   useEffect(() => {
     let cancelled = false;
     getDocentes(buscado)
@@ -39,7 +43,7 @@ export default function DocentesScreen() {
     return () => {
       cancelled = true;
     };
-  }, [buscado]);
+  }, [buscado, version]);
 
   function buscar() {
     setError(null);
@@ -50,6 +54,35 @@ export default function DocentesScreen() {
   function verMas(docente: Docente) {
     selectDocente(docente); // viaja por Context a la pantalla de detalle
     router.push('./docente');
+  }
+
+  // ---------- CRUD ----------
+
+  function nuevo() {
+    router.push({ pathname: '/docente-form', params: { id: 'nuevo' } });
+  }
+
+  function editar(docente: Docente) {
+    router.push({ pathname: '/docente-form', params: { id: String(docente.id) } });
+  }
+
+  async function eliminar(docente: Docente) {
+    const seguro = await confirmar(
+      'Eliminar docente',
+      `¿Seguro que quieres eliminar a ${docente.nombre}? No se puede deshacer.`
+    );
+    if (!seguro) return;
+
+    setBorrando(docente.id);
+    try {
+      await eliminarDocente(docente.id);
+      setError(null);
+      recargar();
+    } catch (e) {
+      setError((e as Error).message);
+    } finally {
+      setBorrando(null);
+    }
   }
 
   return (
@@ -86,6 +119,17 @@ export default function DocentesScreen() {
           </LinearGradient>
         </Pressable>
       </View>
+
+      {/* Crear: abre el formulario vacío (POST /docentes) */}
+      <Pressable
+        onPress={nuevo}
+        style={({ pressed }) => [
+          styles.botonNuevo,
+          { borderColor: AZUL },
+          pressed ? styles.presionado : null,
+        ]}>
+        <Text style={[styles.botonNuevoTexto, { color: AZUL }]}>➕ Nuevo docente</Text>
+      </Pressable>
 
       {error && <ErrorMessage message={error} onRetry={buscar} />}
 
@@ -157,6 +201,33 @@ export default function DocentesScreen() {
               ]}>
               <Text style={[styles.botonVerMasTexto, { color: AZUL }]}>Ver más información →</Text>
             </Pressable>
+
+            {/* Editar (PUT) y eliminar (DELETE) */}
+            <View style={styles.filaAcciones}>
+              <Pressable
+                onPress={() => editar(item)}
+                style={({ pressed }) => [
+                  styles.botonAccion,
+                  { borderColor: colors.border },
+                  pressed ? styles.presionado : null,
+                ]}>
+                <Text style={[styles.botonAccionTexto, { color: colors.text }]}>✏️ Editar</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => eliminar(item)}
+                disabled={borrando === item.id}
+                style={({ pressed }) => [
+                  styles.botonAccion,
+                  { borderColor: ROJO + '55', backgroundColor: ROJO + '12' },
+                  pressed ? styles.presionado : null,
+                ]}>
+                {borrando === item.id ? (
+                  <ActivityIndicator color={ROJO} size="small" />
+                ) : (
+                  <Text style={[styles.botonAccionTexto, { color: ROJO }]}>🗑️ Eliminar</Text>
+                )}
+              </Pressable>
+            </View>
           </View>
         )}
       />
@@ -217,6 +288,27 @@ const styles = StyleSheet.create({
 
   botonVerMas: { borderRadius: 12, borderWidth: 1, paddingVertical: 9, alignItems: 'center' },
   botonVerMasTexto: { fontSize: 13, fontWeight: '700' },
+
+  botonNuevo: {
+    borderRadius: 14,
+    borderWidth: 1.5,
+    borderStyle: 'dashed',
+    paddingVertical: 11,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  botonNuevoTexto: { fontSize: 14, fontWeight: '800' },
+  filaAcciones: { flexDirection: 'row', gap: 8 },
+  botonAccion: {
+    flex: 1,
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingVertical: 8,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: 36,
+  },
+  botonAccionTexto: { fontSize: 13, fontWeight: '700' },
 
   loader: { margin: 24 },
   pie: { textAlign: 'center', fontSize: 11, marginVertical: 14 },
