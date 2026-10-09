@@ -1,4 +1,4 @@
-import { useRouter, type Href } from 'expo-router';
+import { useGlobalSearchParams, useRouter, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { Pressable, Text } from 'react-native';
 
@@ -73,7 +73,7 @@ function Pestanas() {
       {/* Formulario para crear o editar un docente */}
       <Tabs.Screen
         name="docente-form"
-        options={{ title: 'Docente', href: null, headerLeft: () => <BotonVolver destino="/docentes" /> }}
+        options={{ title: 'Docente', href: null, headerLeft: () => <BotonVolverFormulario /> }}
       />
     </Tabs>
   );
@@ -89,16 +89,22 @@ function BotonTema() {
   );
 }
 
-// Botón de regresar en la barra superior de la pantalla de información
+// Botón de regresar en la barra superior de la pantalla de información.
+// Va siempre a un destino fijo: con pestañas, router.back() regresa a la
+// primera pestaña (Pokédex) y no a la pantalla de donde se venía.
 function BotonVolver({ destino }: { destino: Href }) {
   const router = useRouter();
   return (
-    <Pressable
-      onPress={() => (router.canGoBack() ? router.back() : router.replace(destino))}
-      style={{ paddingHorizontal: 16 }}>
+    <Pressable onPress={() => router.navigate(destino)} style={{ paddingHorizontal: 16 }}>
       <Text style={{ color: '#fff', fontSize: 16, fontWeight: '600' }}>‹ Volver</Text>
     </Pressable>
   );
+}
+
+// En el formulario: si se estaba editando vuelve a la ficha, si se creaba a la lista
+function BotonVolverFormulario() {
+  const { id } = useGlobalSearchParams<{ id?: string }>();
+  return <BotonVolver destino={id && id !== 'nuevo' ? '/docente' : '/docentes'} />;
 }
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {

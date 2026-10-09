@@ -230,7 +230,8 @@ export default function DocenteFormScreen() {
         </Pressable>
 
         <Pressable
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/docentes'))}
+          // Destino fijo: con pestañas router.back() lleva al Pokédex
+          onPress={() => router.navigate(editando ? '/docente' : '/docentes')}
           style={[styles.botonSecundario, { borderColor: colors.border }]}>
           <Text style={[styles.botonSecundarioTexto, { color: colors.textSecondary }]}>Cancelar</Text>
         </Pressable>

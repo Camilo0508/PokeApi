@@ -103,7 +103,7 @@ export default function HabilidadesScreen() {
 
             <Pressable
                 style={({pressed}) => [styles.boton, {backgroundColor: tipo.color, opacity: pressed ? 0.85 : 1}]}
-                onPress={() => router.back()}>
+                onPress={() => router.navigate('/buscar')}>
                 <Text style={styles.botonTexto}>Volver a buscar</Text>
             </Pressable>
         </ScrollView>

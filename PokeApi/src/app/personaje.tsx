@@ -89,7 +89,7 @@ export default function PersonajeScreen() {
         <Fila etiqueta="Cumpleaños" valor={selected.birthday} />
       </Tarjeta>
 
-      <Pressable style={[styles.boton, { backgroundColor: colors.primary }]} onPress={() => router.back()}>
+      <Pressable style={[styles.boton, { backgroundColor: colors.primary }]} onPress={() => router.navigate('/onepiece')}>
         <Text style={styles.botonTexto}>Volver a la lista</Text>
       </Pressable>
     </ScrollView>
