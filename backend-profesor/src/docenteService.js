@@ -8,10 +8,15 @@ import * as db from './database.js';
 
 const UNIVERSIDAD = 'Fundación Universitaria Uninpahu';
 
-export function validar(datos) {
+/**
+ * Revisa los datos antes de guardarlos.
+ * parcial = true al actualizar: el nombre solo se exige si llegó.
+ */
+export function validar(datos, { parcial = false } = {}) {
   const errores = [];
 
-  if (!datos.nombre || !datos.nombre.trim()) errores.push('nombre es obligatorio');
+  const faltaNombre = !datos.nombre || !datos.nombre.trim();
+  if (faltaNombre && (!parcial || datos.nombre !== undefined)) errores.push('nombre es obligatorio');
   if (datos.correo && !datos.correo.includes('@')) errores.push('correo inválido');
   if (datos.experiencia != null && !Number.isInteger(datos.experiencia)) {
     errores.push('experiencia debe ser un número entero de años');
@@ -42,9 +47,11 @@ export async function crear(datos) {
 
 export async function actualizar(id, datos) {
   // Solo se mandan los campos que de verdad llegaron
+  // y ya limpios (trim, correo en minúscula...), igual que al crear
+  const limpios = normalizar(datos);
   const cambios = {};
-  for (const [campo, valor] of Object.entries(datos)) {
-    if (valor !== undefined) cambios[campo] = valor;
+  for (const campo of Object.keys(datos)) {
+    if (limpios[campo] !== undefined) cambios[campo] = limpios[campo];
   }
   return db.updateDocente(id, cambios);
 }

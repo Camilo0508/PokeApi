@@ -21,6 +21,7 @@ export const openapi = {
     { name: 'Pokémon', description: 'Consulta de los pokémon guardados en PostgreSQL' },
     { name: 'Imágenes', description: 'Imágenes guardadas en PostgreSQL' },
     { name: 'Alta manual', description: 'Insertar pokémon e imágenes a mano, sin la PokeAPI' },
+    { name: 'Administración', description: 'Editar y eliminar pokémon (la app aún no los usa)' },
     { name: 'Estado', description: 'Salud del servicio' },
   ],
   paths: {
@@ -86,13 +87,14 @@ export const openapi = {
         },
       },
     },
-    '/pokemon/{name}': {
+    // Una sola ruta para GET, PUT y DELETE (OpenAPI no deja repetir /pokemon/{...})
+    '/pokemon/{id}': {
       get: {
         tags: ['Pokémon'],
         summary: 'Un pokémon guardado, por nombre o id',
         parameters: [
           {
-            name: 'name',
+            name: 'id',
             in: 'path',
             required: true,
             description: 'Nombre (pikachu) o número de la pokédex (25)',
@@ -112,6 +114,76 @@ export const openapi = {
                 example: { detail: 'Este pokémon no se encuentra en la base de datos' },
               },
             },
+          },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      put: {
+        tags: ['Administración'],
+        summary: 'Editar un pokémon',
+        description:
+          'Solo se cambian los campos que envíes; los demás quedan igual. El id no se puede cambiar.\n\n' +
+          'Si mandas una lista (types, abilities o moves), reemplaza la anterior completa.',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'Número de la Pokédex',
+            schema: { type: 'integer', example: 132 },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': {
+              schema: { $ref: '#/components/schemas/PokemonCambios' },
+              example: { weight: 45, abilities: ['limber'] },
+            },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Pokémon actualizado',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/PokemonResponse' } } },
+          },
+          400: {
+            description: 'Algún campo es inválido',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          404: {
+            description: 'No está guardado en la base de datos',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          500: { $ref: '#/components/responses/Error' },
+        },
+      },
+      delete: {
+        tags: ['Administración'],
+        summary: 'Eliminar un pokémon',
+        description: 'Borra el pokémon con sus tipos, habilidades, movimientos e imágenes.',
+        parameters: [
+          {
+            name: 'id',
+            in: 'path',
+            required: true,
+            description: 'Número de la Pokédex',
+            schema: { type: 'integer', example: 132 },
+          },
+        ],
+        responses: {
+          200: {
+            description: 'Pokémon eliminado',
+            content: {
+              'application/json': {
+                schema: { $ref: '#/components/schemas/Error' },
+                example: { detail: 'Pokémon eliminado' },
+              },
+            },
+          },
+          404: {
+            description: 'No está guardado en la base de datos',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
           },
           500: { $ref: '#/components/responses/Error' },
         },
@@ -254,6 +326,18 @@ export const openapi = {
             example: ['normal'],
           },
           abilities: { type: 'array', items: { type: 'string' }, example: ['limber', 'imposter'] },
+          moves: { type: 'array', items: { type: 'string' }, example: ['transform'] },
+        },
+      },
+      PokemonCambios: {
+        type: 'object',
+        description: 'Todos opcionales: solo se cambian los que lleguen',
+        properties: {
+          name: { type: 'string', example: 'ditto' },
+          height: { type: 'integer', description: 'En decímetros', example: 3 },
+          weight: { type: 'integer', description: 'En hectogramos', example: 45 },
+          types: { type: 'array', items: { type: 'string' }, example: ['normal'] },
+          abilities: { type: 'array', items: { type: 'string' }, example: ['limber'] },
           moves: { type: 'array', items: { type: 'string' }, example: ['transform'] },
         },
       },

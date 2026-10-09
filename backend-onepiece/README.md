@@ -30,6 +30,8 @@ python -m app.seed --page 2        # la siguiente página
 | GET    | `/characters/{id}`            | Un personaje                       |
 | GET    | `/images/{id}`                | Imagen guardada en MongoDB         |
 | POST   | `/characters`                 | **Insertar un personaje a mano**   |
+| PUT    | `/characters/{id}`            | Editar un personaje (JSON parcial) |
+| DELETE | `/characters/{id}`            | Eliminar un personaje y su imagen  |
 | PUT    | `/characters/{id}/image`      | **Subir su imagen a mano**         |
 | GET    | `/health`                     | Internet, cuántos guardados, base  |
 | GET    | `/docs`                       | Swagger: documentación y pruebas   |

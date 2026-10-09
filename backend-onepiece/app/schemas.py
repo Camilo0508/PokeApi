@@ -50,6 +50,29 @@ class CharacterNuevo(BaseModel):
     orden: int | None = None      # puesto en la lista; si es null va al final
 
 
+class CharacterCambios(BaseModel):
+    """Lo que se envía para editar un personaje: todo opcional, solo cambia lo que llegue."""
+
+    name: str | None = None
+    japones: str | None = None
+    age: int | None = None
+    height: int | None = None
+    status: str | None = None
+    blood_type: str | None = None
+    birthday: str | None = None
+    bounty: int | None = None
+    crew: str | None = None
+    fruit: str | None = None
+    fruit_type: str | None = None
+    job: str | None = None
+    haki: list[Haki] | None = None
+    orden: int | None = None
+
+
+class MensajeResponse(BaseModel):
+    detail: str
+
+
 class CharacterListResponse(BaseModel):
     source: Source
     results: list[Character]

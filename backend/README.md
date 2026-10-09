@@ -32,6 +32,8 @@ npm run seed -- --offset 10     # los 10 siguientes
 | GET    | `/pokemon/{nombre o id}`      | Un pokémon                         |
 | GET    | `/images/{id}/{0,1,2}`        | Gif, artwork y sprite              |
 | POST   | `/pokemon`                    | **Insertar un pokémon a mano**     |
+| PUT    | `/pokemon/{id}`               | Editar un pokémon (JSON parcial)   |
+| DELETE | `/pokemon/{id}`               | Eliminar un pokémon con sus datos  |
 | PUT    | `/images/{id}/{0,1,2}`        | **Subir una imagen a mano**        |
 | GET    | `/health`                     | Internet, cuántos guardados, base  |
 | GET    | `/docs`                       | Swagger: documentación y pruebas   |
@@ -39,6 +41,9 @@ npm run seed -- --offset 10     # los 10 siguientes
 
 Para insertar a mano, lo más cómodo es abrir `/docs` (Swagger), usar `POST /pokemon`
 con el JSON del pokémon y después `PUT /images/{id}/{posicion}` para cada imagen.
+
+`PUT` y `DELETE /pokemon/{id}` completan el CRUD; quedan listos en el backend pero la
+app todavía no los consume.
 
 Las consultas se responden **solo con lo que hay en PostgreSQL**: el servicio no consulta
 la PokeAPI. Si un pokémon no está guardado, responde 404 "Este pokémon no se encuentra en

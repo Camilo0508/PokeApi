@@ -119,6 +119,9 @@ async function manejar(req, res) {
       if (Object.keys(datos).length === 0) {
         return responder(res, 400, { detail: 'No llegó ningún campo para actualizar' });
       }
+      const errores = docentes.validar(datos, { parcial: true });
+      if (errores.length > 0) return responder(res, 400, { detail: errores.join(', ') });
+
       const docente = await docentes.actualizar(id, datos);
       if (!docente) return responder(res, 404, { detail: 'Este docente no está en la base de datos' });
       return responder(res, 200, { docente });

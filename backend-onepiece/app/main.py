@@ -6,11 +6,13 @@ from fastapi.responses import RedirectResponse
 from . import database as db
 from . import repository
 from .schemas import (
+    CharacterCambios,
     CharacterListResponse,
     CharacterNuevo,
     CharacterResponse,
     ErrorResponse,
     HealthResponse,
+    MensajeResponse,
 )
 
 DESCRIPCION = """
@@ -35,6 +37,7 @@ app = FastAPI(
         {"name": "Personajes", "description": "Consulta y búsqueda de los personajes guardados en MongoDB"},
         {"name": "Imágenes", "description": "Imágenes guardadas en MongoDB"},
         {"name": "Alta manual", "description": "Insertar personajes e imágenes a mano, sin las APIs externas"},
+        {"name": "Administración", "description": "Editar y eliminar personajes (la app aún no los usa)"},
         {"name": "Estado", "description": "Salud del servicio"},
     ],
 )
@@ -112,6 +115,57 @@ def crear_character(nuevo: CharacterNuevo, request: Request):
     db.save_character(personaje)
     guardado = db.get_character(personaje["id"])
     return CharacterResponse(source="local", character=con_imagen(guardado, request))
+
+
+# ---------- Editar y eliminar (CRUD) ----------
+# Quedan listos en el backend; la app todavía no los consume.
+
+@app.put(
+    "/characters/{character_id}",
+    response_model=CharacterResponse,
+    tags=["Administración"],
+    summary="Editar un personaje",
+    description=(
+        "Solo se cambian los campos que envíes; los demás quedan igual. El id no se puede cambiar.\n\n"
+        "Si mandas `haki`, reemplaza la lista completa."
+    ),
+    responses={400: {"model": ErrorResponse, "description": "No llegó ningún campo"},
+               404: {"model": ErrorResponse, "description": "No está guardado en la base de datos"}},
+)
+def editar_character(
+    cambios: CharacterCambios,
+    request: Request,
+    character_id: str = Path(description="Id del personaje", examples=["1"]),
+):
+    if db.get_character(character_id) is None:
+        raise HTTPException(
+            status_code=404, detail="Este personaje no se encuentra en la base de datos"
+        )
+
+    datos = cambios.model_dump(exclude_unset=True)
+    if not datos:
+        raise HTTPException(status_code=400, detail="No llegó ningún campo para actualizar")
+    if "name" in datos and not (datos["name"] or "").strip():
+        raise HTTPException(status_code=400, detail="name no puede ir vacío")
+
+    db.save_character({"id": character_id, **datos})
+    return CharacterResponse(source="local", character=con_imagen(db.get_character(character_id), request))
+
+
+@app.delete(
+    "/characters/{character_id}",
+    response_model=MensajeResponse,
+    tags=["Administración"],
+    summary="Eliminar un personaje",
+    description="Borra el personaje con su imagen. No se puede deshacer.",
+    responses={404: {"model": ErrorResponse, "description": "No está guardado en la base de datos"}},
+)
+def eliminar_character(character_id: str = Path(description="Id del personaje", examples=["1"])):
+    if not db.delete_character(character_id):
+        raise HTTPException(
+            status_code=404, detail="Este personaje no se encuentra en la base de datos"
+        )
+    return MensajeResponse(detail="Personaje eliminado")
 
 
 @app.put(

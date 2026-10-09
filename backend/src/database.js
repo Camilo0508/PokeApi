@@ -167,6 +167,12 @@ export async function getImage(pokemonId, posicion) {
   return rows[0] ?? null;
 }
 
+// Las tablas hijas (movimientos, tipos, habilidades, imágenes) se borran solas por ON DELETE CASCADE
+export async function deletePokemon(id) {
+  const { rowCount } = await pool.query('DELETE FROM pokemon WHERE id = $1', [id]);
+  return rowCount > 0;
+}
+
 export async function countPokemon() {
   const { rows } = await pool.query('SELECT COUNT(*)::int AS total FROM pokemon');
   return rows[0].total;

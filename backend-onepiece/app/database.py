@@ -77,6 +77,11 @@ def get_image(character_id: str) -> tuple[bytes, str] | None:
     return bytes(doc["image_data"]), doc.get("image_type", "image/webp")
 
 
+def delete_character(character_id: str) -> bool:
+    """Borra el documento completo (con su imagen, que va dentro)."""
+    return characters.delete_one({"_id": character_id}).deleted_count > 0
+
+
 def count_characters() -> int:
     return characters.count_documents({})
 

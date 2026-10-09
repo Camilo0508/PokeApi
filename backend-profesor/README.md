@@ -24,7 +24,7 @@ Documentación: http://localhost:8002/docs
 | GET    | `/docentes` | query: `buscar`, `limit`, `page` |
 | GET    | `/docentes/{id}` | path: `id` |
 | POST   | `/docentes` | query: `nombre` (obligatorio), `profesion`, `titulo`, `universidad`, `facultad`, `cargo`, `correo`, `experiencia`, `resumen`, `foto` |
-| PUT    | `/docentes/{id}` | path: `id` + los query params que quieras cambiar |
+| PUT    | `/docentes/{id}` | path: `id` + los query params que quieras cambiar (se validan igual que al crear) |
 | DELETE | `/docentes/{id}` | path: `id` |
 | GET    | `/health` · `/docs` · `/openapi.json` | — |
 

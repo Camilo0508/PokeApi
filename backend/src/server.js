@@ -87,6 +87,57 @@ app.post('/pokemon', async (req, res, next) => {
   }
 });
 
+// ---------- Editar y eliminar (CRUD) ----------
+// Quedan listos en el backend; la app todavía no los consume.
+
+app.put('/pokemon/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    const actual = Number.isInteger(id) ? await db.getPokemon(String(id)) : null;
+    if (!actual) {
+      return res.status(404).json({ detail: 'Este pokémon no se encuentra en la base de datos' });
+    }
+
+    // Solo se cambian los campos que lleguen; el id no se puede cambiar
+    const { name, height, weight, types, abilities, moves } = req.body ?? {};
+    const errores = [];
+    if (name !== undefined && !String(name).trim()) errores.push('name no puede ir vacío');
+    if (height !== undefined && !Number.isInteger(height)) errores.push('height debe ser entero');
+    if (weight !== undefined && !Number.isInteger(weight)) errores.push('weight debe ser entero');
+    for (const [campo, valor] of Object.entries({ types, abilities, moves })) {
+      if (valor !== undefined && !Array.isArray(valor)) errores.push(`${campo} debe ser una lista`);
+    }
+    if (errores.length > 0) return res.status(400).json({ detail: errores.join(', ') });
+
+    await db.savePokemon({
+      id,
+      name: name !== undefined ? String(name).trim().toLowerCase() : actual.name,
+      height: height ?? actual.height,
+      weight: weight ?? actual.weight,
+      types: types ?? actual.types,
+      abilities: abilities ?? actual.abilities,
+      moves: moves ?? actual.moves,
+    });
+
+    const guardado = await db.getPokemon(String(id));
+    res.json({ source: 'local', pokemon: withImages(req, guardado) });
+  } catch (error) {
+    next(error);
+  }
+});
+
+app.delete('/pokemon/:id', async (req, res, next) => {
+  try {
+    const id = Number(req.params.id);
+    if (!Number.isInteger(id) || !(await db.deletePokemon(id))) {
+      return res.status(404).json({ detail: 'Este pokémon no se encuentra en la base de datos' });
+    }
+    res.json({ detail: 'Pokémon eliminado' });
+  } catch (error) {
+    next(error);
+  }
+});
+
 // Sube una de las tres imágenes de un pokémon que ya exista
 app.put('/images/:id/:posicion', async (req, res, next) => {
   try {

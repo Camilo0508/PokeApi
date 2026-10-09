@@ -23,6 +23,24 @@ const Docente = {
   },
 };
 
+const ErrorSchema = {
+  type: 'object',
+  properties: { detail: { type: 'string', example: 'Este docente no está en la base de datos' } },
+};
+
+const conError = (description) => ({
+  description,
+  content: { 'application/json': { schema: ErrorSchema } },
+});
+
+const ParamId = {
+  name: 'id',
+  in: 'path',
+  required: true,
+  description: 'Id del docente',
+  schema: { type: 'integer', example: 1 },
+};
+
 // Los mismos campos, pero como query params para crear y actualizar
 const camposQuery = (obligatorioNombre) =>
   Object.entries(Docente.properties)
@@ -50,7 +68,10 @@ export const openapi = {
   servers: [{ url: '/' }],
   tags: [
     { name: 'Docentes', description: 'Consulta de los docentes guardados' },
-    { name: 'Administración', description: 'Crear, actualizar y eliminar' },
+    {
+      name: 'Administración',
+      description: 'CRUD del docente: crear (POST), editar (PUT) y eliminar (DELETE)',
+    },
     { name: 'Estado', description: 'Salud del servicio' },
   ],
   paths: {
@@ -100,7 +121,7 @@ export const openapi = {
               },
             },
           },
-          400: { description: 'Faltan datos o son inválidos' },
+          400: conError('Falta el nombre, el correo no tiene @ o la experiencia no es un número entero'),
         },
       },
     },
@@ -109,7 +130,7 @@ export const openapi = {
         tags: ['Docentes'],
         summary: 'Ficha completa de un docente',
         description: 'Es lo que abre el botón "Ver más" de la aplicación.',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer', example: 1 } }],
+        parameters: [ParamId],
         responses: {
           200: {
             description: 'El docente',
@@ -122,30 +143,45 @@ export const openapi = {
               },
             },
           },
-          404: { description: 'No está en la base de datos' },
+          404: conError('No está en la base de datos'),
         },
       },
       put: {
         tags: ['Administración'],
-        summary: 'Actualizar un docente (por query params)',
-        description: 'Solo se cambian los campos que envíes. Ejemplo: `/docentes/1?cargo=Director`',
-        parameters: [
-          { name: 'id', in: 'path', required: true, schema: { type: 'integer', example: 1 } },
-          ...camposQuery(false),
-        ],
+        summary: 'Editar un docente (por query params)',
+        description:
+          'Solo se cambian los campos que envíes; los demás quedan igual. ' +
+          'Ejemplo: `/docentes/1?cargo=Director&experiencia=10`',
+        parameters: [ParamId, ...camposQuery(false)],
         responses: {
-          200: { description: 'Docente actualizado' },
-          400: { description: 'No llegó ningún campo' },
-          404: { description: 'No está en la base de datos' },
+          200: {
+            description: 'Docente actualizado',
+            content: {
+              'application/json': {
+                schema: { type: 'object', properties: { docente: Docente } },
+              },
+            },
+          },
+          400: conError('No llegó ningún campo, o alguno es inválido'),
+          404: conError('No está en la base de datos'),
         },
       },
       delete: {
         tags: ['Administración'],
         summary: 'Eliminar un docente',
-        parameters: [{ name: 'id', in: 'path', required: true, schema: { type: 'integer', example: 1 } }],
+        description: 'Borra el docente de la base. No se puede deshacer.',
+        parameters: [ParamId],
         responses: {
-          200: { description: 'Docente eliminado' },
-          404: { description: 'No está en la base de datos' },
+          200: {
+            description: 'Docente eliminado',
+            content: {
+              'application/json': {
+                schema: ErrorSchema,
+                example: { detail: 'Docente eliminado' },
+              },
+            },
+          },
+          404: conError('No está en la base de datos'),
         },
       },
     },
