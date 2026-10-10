@@ -1,21 +1,8 @@
-/**
- * Base de datos RELACIONAL (PostgreSQL).
- *
- * Cuatro tablas relacionadas por llaves foráneas:
- *   pokemon  1 ──< pokemon_move
- *            1 ──< pokemon_ability
- *            1 ──< pokemon_image
- */
+
 import pg from 'pg';
 
 import { DATABASE_URL } from './config.js';
 
-/**
- * ¿Hace falta SSL?
- *   - En local (Docker) no.
- *   - Dentro de Render, con la dirección interna (dpg-xxxx, sin punto), tampoco.
- *   - Desde fuera (dirección externa de Render o Neon), sí.
- */
 function necesitaSsl(url) {
   try {
     const host = new URL(url).hostname;

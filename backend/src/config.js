@@ -2,6 +2,7 @@ export const POKEAPI_URL = 'https://pokeapi.co/api/v2';
 
 // Base de datos RELACIONAL (PostgreSQL).
 // En Render la pone el propio Render; en local sale del archivo .env
+
 const LOCAL = 'postgres://postgres:dev@localhost:5433/pokeapi';
 
 if (!process.env.DATABASE_URL) {
