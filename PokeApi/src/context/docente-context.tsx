@@ -17,10 +17,11 @@ const DocenteContext = createContext<DocenteContextValue | null>(null);
 export function DocenteProvider({ children }: { children: ReactNode }) {
   const [selected, setSelected] = useState<Docente | null>(null);
   const [version, setVersion] = useState(0);
-  const [pendientes, setPendientes] =useState(0);
-  const recargar = useCallback(() => {setVersion((v) => v + 1), 
-  contarPendientes().then(setPendientes);
-},[]);
+  const [pendientes, setPendientes] = useState(0);
+  const recargar = useCallback(() => {
+    setVersion((v) => v + 1);
+    contarPendientes().then(setPendientes);
+  }, []);
   const intentarSincronizar = useCallback(async () => {
     const antes = await contarPendientes();
     if (antes === 0) return setPendientes(0);
@@ -29,8 +30,9 @@ export function DocenteProvider({ children }: { children: ReactNode }) {
     setPendientes(despues);
     if (despues < antes) setVersion((v) => v + 1); // la lista se refresca con los ids reales
   }, []);
-    useEffect(() => {
-    intentarSincronizar(); // al abrir la app
+  useEffect(() => {
+    // Al abrir la app (en el siguiente turno, no dentro del render del efecto)
+    const inicio = setTimeout(intentarSincronizar, 0);
     // Volvió el internet del teléfono
     const red = Network.addNetworkStateListener((estado) => {
       if (estado.isInternetReachable) intentarSincronizar();
@@ -42,6 +44,7 @@ export function DocenteProvider({ children }: { children: ReactNode }) {
     // Por si el internet nunca se cayó pero el microservicio estaba apagado
     const reloj = setInterval(intentarSincronizar, 15000);
     return () => {
+      clearTimeout(inicio);
       red.remove();
       app.remove();
       clearInterval(reloj);
