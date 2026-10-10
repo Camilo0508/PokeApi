@@ -16,7 +16,7 @@ import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 
 import { useDocente } from '@/context/docente-context';
 import { useTheme } from '@/context/theme-context';
-import { actualizarDocente, crearDocente, getDocente } from '@/services/docentes-api';
+import { actualizarDocente, crearDocente, getDocente } from '@/services/docente-offline';
 import { Docente, DocenteDatos } from '@/types/docente';
 
 const AZUL = '#2563EB';

@@ -7,17 +7,18 @@ import { useRouter } from 'expo-router';
 import { ErrorMessage } from '@/components/error-message';
 import { useDocente } from '@/context/docente-context';
 import { useTheme } from '@/context/theme-context';
-import { eliminarDocente, getDocentes } from '@/services/docentes-api';
+import { eliminarDocente, getDocentes } from '@/services/docente-offline';
 import { Docente } from '@/types/docente';
 import { confirmar } from '@/utils/confirmar';
 
 const AZUL = '#2563EB'; // el color institucional de esta sección
 const ROJO = '#DC2626'; // para eliminar
 
+
 export default function DocentesScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { selectDocente, version, recargar } = useDocente();
+  const { selectDocente, version, recargar, pendientes } = useDocente();
 
   const [query, setQuery] = useState('');
   const [buscado, setBuscado] = useState('');
@@ -129,6 +130,11 @@ export default function DocentesScreen() {
           pressed ? styles.presionado : null,
         ]}>
         <Text style={[styles.botonNuevoTexto, { color: AZUL }]}>➕ Nuevo docente</Text>
+        {pendientes > 0 && (
+        <Text style={[styles.aviso, { color: colors.text }]}>
+          📴 {pendientes} cambio(s) guardado(s) en el teléfono. Se enviarán cuando el servidor vuelva.
+        </Text>
+      )}
       </Pressable>
 
       {error && <ErrorMessage message={error} onRetry={buscar} />}
@@ -247,6 +253,7 @@ const styles = StyleSheet.create({
     padding: 12,
     marginTop: 14,
   },
+  aviso: { marginHorizontal: 16, marginBottom: 8, padding: 10, borderRadius: 8, backgroundColor: '#F59E0B33' },
   escudo: { fontSize: 30 },
   encabezadoTexto: { flex: 1 },
   titulo: { fontSize: 18, fontWeight: '800' },

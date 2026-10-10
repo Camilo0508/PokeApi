@@ -6,7 +6,7 @@ import { useRouter } from 'expo-router';
 import { ErrorMessage } from '@/components/error-message';
 import { useDocente } from '@/context/docente-context';
 import { useTheme } from '@/context/theme-context';
-import { eliminarDocente, getDocente } from '@/services/docentes-api';
+import { eliminarDocente, getDocente } from '@/services/docente-offline';
 import { Docente } from '@/types/docente';
 import { confirmar } from '@/utils/confirmar';
 
