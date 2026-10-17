@@ -22,7 +22,7 @@ async function guardarEnCache(d: Docente, nuevo = 0) {
 }
 
 async function idsPendientes(){
-    const filas = await db!.getAllAsync<{docente_id: number}>(`SELECT D ISTINCT docente_id FROM cola`);
+    const filas = await db!.getAllAsync<{docente_id: number}>(`SELECT DISTINCT docente_id FROM cola`);
     return new Set(filas.map((f) => f.docente_id));
 }
 
@@ -60,7 +60,7 @@ export async function leerAjuste(clave: string){
 
 export async function guardarAjuste(clave:string, valor: string){
     if (!db) return;
-    await db.runAsync('insert or replace into ajustes (clave, valor) values ?,?' ,[clave,valor]);
+    await db.runAsync('insert or replace into ajustes (clave, valor) values (?,?)' ,[clave,valor]);
 }
 
 //Posibles conflictos

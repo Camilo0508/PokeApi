@@ -54,3 +54,20 @@ services:
         sync: false
       - key: MONGODB_DB
         value: onepiece
+  - type: web
+    name: asistente-service
+    runtime: node
+    plan: free
+    rootDir: backend-asistente
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      # Secreta: se escribe a mano en el panel de Render
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: POKEMON_API_URL
+        value: https://pokemon-service-p33l.onrender.com
+      - key: ONEPIECE_API_URL
+        value: https://onepiece-service-uewr.onrender.com
+      - key: DOCENTES_API_URL
+        value: https://profesor-service-0pmh.onrender.com

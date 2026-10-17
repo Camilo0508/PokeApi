@@ -8,10 +8,10 @@ import { openapi } from './openapi.js';
 import * as repository from './repository.js';
 
 const app = express();
-app.set('trust proxy', true); // en Render, para que las URLs de las imágenes salgan con https
+app.set('trust proxy', true); 
 app.use(cors());
 app.use(express.json({ limit: '2mb' })); // para recibir pokémon en JSON
-// Para recibir imágenes: llegan como bytes en el cuerpo de la petición
+// Para recibir imágenes
 app.use(express.raw({ type: ['image/*', 'application/octet-stream'], limit: '8mb' }));
 
 // Documentación Swagger: se puede leer y probar cada endpoint desde el navegador

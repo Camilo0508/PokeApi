@@ -5,6 +5,7 @@ import { Platform } from 'react-native';
 const PORT_POKEMON = 8000; // Node + Express + PostgreSQL
 const PORT_ONEPIECE = 8001; // Python + FastAPI + MongoDB
 const PORT_DOCENTES = 8002; // Node sin Express (node:http) + PostgreSQL
+const PORT_ASISTENTE = 8003;
 
 function resolverApiUrl(port: number, urlDeProduccion?: string) {
   // 1. Si hay URL de producción en .env, se usa esa (los servicios en Render)
@@ -27,3 +28,4 @@ function resolverApiUrl(port: number, urlDeProduccion?: string) {
 export const API_URL = resolverApiUrl(PORT_POKEMON, process.env.EXPO_PUBLIC_API_URL);
 export const ONEPIECE_API_URL = resolverApiUrl(PORT_ONEPIECE, process.env.EXPO_PUBLIC_ONEPIECE_API_URL);
 export const DOCENTES_API_URL = resolverApiUrl(PORT_DOCENTES, process.env.EXPO_PUBLIC_DOCENTES_API_URL);
+export const ASISTENTE_API_URL = resolverApiUrl(PORT_ASISTENTE, process.env.EXPO_PUBLIC_ASISTENTE_API_URL);
