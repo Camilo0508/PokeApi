@@ -24,4 +24,4 @@ export interface DocenteResponse {
 }
 
 // Lo que se manda al crear o editar (todo menos el id)
-export type DocenteDatos = Omit<Docente, 'id'>;
+export type DocenteDatos = Omit<Docente, 'id' | 'nuevo'>;

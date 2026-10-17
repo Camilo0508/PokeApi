@@ -12,7 +12,8 @@ import { confirmar } from '@/utils/confirmar';
 
 const AZUL = '#2563EB';
 const ROJO = '#DC2626';
-export type DocenteDatos = Omit<Docente, 'id' | 'nuevo'>;
+
+
 export default function DocenteScreen() {
   // Llega por Context desde la lista...
   const { selected, selectDocente, recargar } = useDocente();
