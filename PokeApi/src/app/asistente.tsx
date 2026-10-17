@@ -11,6 +11,8 @@ import {
   View,
 } from 'react-native';
 
+import { useHeaderHeight } from 'expo-router/react-navigation';
+
 import { useTheme } from '@/context/theme-context';
 import { preguntar, type Mensaje, type TipoChat } from '@/services/chat-api';
 
@@ -28,6 +30,8 @@ interface Burbuja extends Mensaje {
 export default function AsistenteScreen() {
   const { colors } = useTheme();
   const lista = useRef<FlatList<Burbuja>>(null);
+  // Alto real de la barra superior: el teclado debe empujar la pantalla justo debajo de ella
+  const altoHeader = useHeaderHeight();
 
   const [tipo, setTipo] = useState<TipoChat>('pokemon');
   const [nombre, setNombre] = useState('');
@@ -75,8 +79,9 @@ export default function AsistenteScreen() {
   return (
     <KeyboardAvoidingView
       style={[styles.flex, { backgroundColor: colors.background }]}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      keyboardVerticalOffset={90}>
+      // En Android con edge-to-edge el sistema ya no encoge la pantalla solo: 'padding' en ambos
+      behavior={Platform.OS === 'web' ? undefined : 'padding'}
+      keyboardVerticalOffset={altoHeader}>
       {/* 1. ¿Sobre qué se pregunta? */}
       <View style={styles.chips}>
         {TIPOS.map((t) => {

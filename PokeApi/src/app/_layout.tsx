@@ -1,6 +1,7 @@
 import { useGlobalSearchParams, useRouter, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
 import { Pressable, Text, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { CharacterProvider } from '@/context/character-context';
 import { DocenteProvider } from '@/context/docente-context';
@@ -26,6 +27,8 @@ export default function TabLayout() {
 // por eso las pestañas van aquí y no dentro de TabLayout
 function Pestanas() {
   const { colors } = useTheme();
+  // Espacio de los botones del celular (atrás, inicio...) para que no tapen las pestañas
+  const insets = useSafeAreaInsets();
 
   return (
     <Tabs
@@ -34,7 +37,13 @@ function Pestanas() {
         headerTintColor: '#fff',
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: '#8E8E93',
-        tabBarStyle: { backgroundColor: colors.card, height: 64, paddingBottom: 8, paddingTop: 6 },
+        tabBarStyle: {
+          backgroundColor: colors.card,
+          height: 58 + insets.bottom,
+          paddingBottom: insets.bottom + 6,
+          paddingTop: 6,
+        },
+        tabBarHideOnKeyboard: true, // al escribir se esconde la barra y deja espacio
         tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
         headerRight: () => <Acciones />,
       }}>
