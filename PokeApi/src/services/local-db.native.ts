@@ -18,11 +18,11 @@ db.execSync(`
   );
 `);
 
-const version = db.getFirstSync<{user_version:number}>('PRAGMA user_versoin');
-if ((version?.user_version ?? 0 ) < 1){
+const version = db.getFirstSync<{ user_version: number }>('PRAGMA user_version');
+if ((version?.user_version ?? 0) < 1) {
   db.execSync(`
-    ALTER TABLE docent ADD COLUMN nuevo INTERGER NOT NULL DEFAULT 0;
-    CREATE TABLE IF NOT EXISTS ajustes (clave TEXT PRIMATY KEY, valor TEXT);
+    ALTER TABLE docente ADD COLUMN nuevo INTEGER NOT NULL DEFAULT 0;
+    CREATE TABLE IF NOT EXISTS ajustes (clave TEXT PRIMARY KEY, valor TEXT);
     PRAGMA user_version = 1;
-    `);
+  `);
 }

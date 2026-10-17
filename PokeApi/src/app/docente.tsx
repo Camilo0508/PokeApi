@@ -6,13 +6,13 @@ import { useRouter } from 'expo-router';
 import { ErrorMessage } from '@/components/error-message';
 import { useDocente } from '@/context/docente-context';
 import { useTheme } from '@/context/theme-context';
-import { eliminarDocente, getDocente } from '@/services/docente-offline';
+import { eliminarDocente, getDocente, marcarVisto } from '@/services/docente-offline';
 import { Docente } from '@/types/docente';
 import { confirmar } from '@/utils/confirmar';
 
 const AZUL = '#2563EB';
 const ROJO = '#DC2626';
-
+export type DocenteDatos = Omit<Docente, 'id' | 'nuevo'>;
 export default function DocenteScreen() {
   // Llega por Context desde la lista...
   const { selected, selectDocente, recargar } = useDocente();
@@ -29,6 +29,7 @@ export default function DocenteScreen() {
 
   useEffect(() => {
     if (!selected) return;
+    if (selected.nuevo === 1) marcarVisto(selected.id).then(recargar);
     let cancelled = false;
 
     getDocente(selected.id)
@@ -42,7 +43,7 @@ export default function DocenteScreen() {
     return () => {
       cancelled = true;
     };
-  }, [selected]);
+  }, [selected, recargar]);
 
   // CRUD
 
@@ -99,7 +100,8 @@ export default function DocenteScreen() {
           </View>
         )}
 
-        <Text style={[styles.nombre, { color: colors.text }]}>{docente.nombre}</Text>
+        <Text style={[styles.nombre, { color: colors.text }]}>{docente.nombre} {selected?.nuevo === 1 && <Text style={styles.nuevo}>NUEVO</Text>}</Text>
+        
         {docente.profesion && (
           <Text style={[styles.profesion, { color: AZUL }]}>{docente.profesion}</Text>
         )}
@@ -230,4 +232,8 @@ const styles = StyleSheet.create({
   botonAccionTexto: { fontWeight: '800' },
   boton: { borderRadius: 14, paddingVertical: 14, alignItems: 'center' },
   botonTexto: { color: '#fff', fontWeight: 'bold' },
+  nuevo: {
+    backgroundColor: '#16A34A', color: '#fff', fontSize: 10, fontWeight: '800',
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden',
+  },
 });

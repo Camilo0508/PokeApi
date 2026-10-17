@@ -22,33 +22,33 @@ async function guardarEnCache(d: Docente, nuevo = 0) {
 }
 
 async function idsPendientes(){
-    const filas = await db!.getAllAsync<{docente_id: number}>(`SELECT DISTINCT docente_od FROM cola`);
+    const filas = await db!.getAllAsync<{docente_id: number}>(`SELECT D ISTINCT docente_id FROM cola`);
     return new Set(filas.map((f) => f.docente_id));
 }
 
 async function encolar(tipo: Tipo, id:number, datos?: DocenteDatos){
-    await db!.runAsync('insert into cola (tipo, docente_id datos) values (?,?,?)', [tipo, id, datos? JSON.stringify(datos): null]);
+    await db!.runAsync('insert into cola (tipo, docente_id, datos) values (?,?,?)', [tipo, id, datos? JSON.stringify(datos): null]);
 }
 
 export async function contarPendientes(){
     if (!db) return 0;
-    const fila = await db.getFirstAsync<{total:number}>('selct count (*) as total from cola');
+    const fila = await db.getFirstAsync<{total:number}>('select count(*) as total from cola');
     return fila?.total ?? 0;
 }
 //docentes que llegaron de la nube y el usuario no los a visto
 
 export async function contarNuevos(){
     if (!db) return 0;
-    const fila = await db.getFirstAsync<{total:number}>('selct count (*) as total from docente where nuevo = 1')
+    const fila = await db.getFirstAsync<{total:number}>('select count(*) as total from docente where nuevo = 1')
     return fila?.total ?? 0;
 }
 
 // sequita la bandera nuevo de un docente de todos si no se pasa id 
 
-export async function  marcarVisto(id:number){
+export async function  marcarVisto(id?:number){
     if (!db) return 0;
     if (id == null) await db.runAsync('update docente set nuevo = 0');
-    else await db.runAsync('updtae docente set nuevo = 0 where ud = ?');
+    else await db.runAsync('update docente set nuevo = 0 where id = ?'[id]);
 }
 
 //Ajuste 
@@ -60,7 +60,7 @@ export async function leerAjuste(clave: string){
 
 export async function guardarAjuste(clave:string, valor: string){
     if (!db) return;
-    await db.runAsync('inster or repplace into ajuste (clave, valor) values ?,?' ,[clave,valor]);
+    await db.runAsync('insert or replace into ajustes (clave, valor) values ?,?' ,[clave,valor]);
 }
 
 //Posibles conflictos
