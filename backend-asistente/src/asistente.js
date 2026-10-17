@@ -45,8 +45,11 @@ export async function responder(mensajes) {
 
   // 3. No existe: se responde aquí y Claude no se consulta
   if (!resultado.encontrado) {
+    if (resultado.caidos.length === 3) {
+      return '⏳ No pude conectarme con las bases de datos (pokémon, One Piece y docentes). Si están en Render pueden estar despertando: intenta de nuevo en un minuto.';
+    }
     const aviso = resultado.caidos.length
-      ? `\n\n(No pude revisar ${resultado.caidos.join(', ')}: el servicio no respondió, intenta de nuevo en un momento.)`
+      ? `\n\n(No pude revisar ${resultado.caidos.join(' ni ')}: el servicio no respondió, intenta de nuevo en un momento.)`
       : '';
     return `Ese personaje o persona no está en nuestra base de datos. Puedes preguntarme por los pokémon, los personajes de One Piece o los docentes que tenemos guardados.${aviso}`;
   }
@@ -58,7 +61,8 @@ export async function responder(mensajes) {
       model: 'claude-opus-5-5',
       max_tokens: 4000,
       system: `${SISTEMA}\n\nREGISTRO (${resultado.categoria}: ${resultado.nombre}):\n${JSON.stringify(resultado.datos)}`,
-      messages: mensajes,
+      // Solo la conversación sobre este registro, para que no se mezcle con temas anteriores
+      messages: mensajes.slice(resultado.desde),
       output_config: { effort: 'medium' },
     });
   } catch (err) {

@@ -1,12 +1,20 @@
 import { POKEMON_API_URL, ONEPIECE_API_URL, DOCENTES_API_URL } from './config.js';
 
-async function pedir(url) {
+async function pedirUnaVez(url) {
   try {
-    const res = await fetch(url, { signal: AbortSignal.timeout(90000) });
+    const res = await fetch(url, { signal: AbortSignal.timeout(60000) });
     return { ok: res.ok, status: res.status, data: res.ok ? await res.json() : null };
-  } catch {
-    return { ok: false, status: 0, data: null };
+  } catch (err) {
+    return { ok: false, status: 0, data: null, motivo: err.message };
   }
+}
+
+// Si falla se intenta una vez más: en Render gratis el primer intento puede ser el que lo despierta
+async function pedir(url) {
+  let r = await pedirUnaVez(url);
+  if (!r.ok) r = await pedirUnaVez(url);
+  if (!r.ok) console.error(`No respondió ${url} (status ${r.status}${r.motivo ? `, ${r.motivo}` : ''})`);
+  return r;
 }
 
 // Las imágenes y fotos no le sirven a la IA y gastan tokens
@@ -85,26 +93,29 @@ function puntaje(texto, nombre) {
   return puntos;
 }
 
-// Busca en el texto el nombre de algún registro de las tres bases de datos, SIN IA
-async function buscarEnTexto(texto) {
+// Trae las listas de las tres bases de datos (una sola vez por pregunta)
+async function traerListas() {
   const tipos = Object.keys(FUENTES);
   const listas = await Promise.all(tipos.map(listarTodos));
+  return {
+    listas: tipos.map((tipo, i) => ({ tipo, registros: listas[i] ?? [] })),
+    caidos: tipos.filter((_, i) => listas[i] === null).map((t) => CATEGORIA[t]),
+  };
+}
 
+// Busca en un texto el nombre de algún registro, SIN IA
+function buscarEnTexto(texto, listas) {
   const candidatos = [];
-  const caidos = [];
-  tipos.forEach((tipo, i) => {
-    if (listas[i] === null) return caidos.push(tipo);
-    for (const registro of listas[i]) {
+  for (const { tipo, registros } of listas) {
+    for (const registro of registros) {
       const puntos = puntaje(texto, FUENTES[tipo].nombre(registro));
       if (puntos > 0) candidatos.push({ tipo, registro, puntos });
     }
-  });
-
-  if (candidatos.length === 0) return { caidos };
+  }
+  if (candidatos.length === 0) return null;
 
   const mejor = Math.max(...candidatos.map((c) => c.puntos));
-  const empatados = candidatos.filter((c) => c.puntos === mejor);
-  return { caidos, empatados };
+  return candidatos.filter((c) => c.puntos === mejor);
 }
 
 // "¿Quién es Goku?" nombra a alguien nuevo: si no existe, no se debe seguir con el anterior
@@ -113,28 +124,34 @@ const PIDE_ALGUIEN = /\b(quien es|quien era|que sabes de|hablame de|cuentame de|
 /**
  * Revisa los mensajes del usuario, del más nuevo al más viejo, buscando a quién se refiere.
  * Así "¿y cuánto pesa?" sigue hablando del último que se nombró.
+ * Devuelve también "desde": la posición del mensaje donde se nombró, para que a la IA
+ * solo le llegue la conversación sobre ese registro y no se mezcle con los anteriores.
  */
 export async function detectar(mensajes) {
-  let delUsuario = mensajes.filter((m) => m.role === 'user').reverse();
-  if (PIDE_ALGUIEN.test(normalizar(delUsuario[0]?.content))) delUsuario = delUsuario.slice(0, 1);
-  let caidos = [];
+  const { listas, caidos } = await traerListas();
 
-  for (const mensaje of delUsuario) {
-    const resultado = await buscarEnTexto(normalizar(mensaje.content));
-    caidos = resultado.caidos;
-    if (!resultado.empatados) continue;
+  const ultimo = mensajes.length - 1;
+  const ultimoTexto = normalizar(mensajes[ultimo]?.content);
+  // Si se pide a alguien nuevo, o algún servicio falló, no se sigue con el tema anterior
+  const soloElUltimo = PIDE_ALGUIEN.test(ultimoTexto) || caidos.length > 0;
 
-    if (resultado.empatados.length > 1) {
+  for (let i = ultimo; i >= 0; i--) {
+    if (mensajes[i].role !== 'user') continue;
+    if (soloElUltimo && i !== ultimo) break;
+
+    const empatados = buscarEnTexto(normalizar(mensajes[i].content), listas);
+    if (!empatados) continue;
+
+    if (empatados.length > 1) {
       return {
-        varios: resultado.empatados
-          .slice(0, 6)
-          .map((c) => `${FUENTES[c.tipo].nombre(c.registro)} (${CATEGORIA[c.tipo]})`),
+        varios: empatados.slice(0, 6).map((c) => `${FUENTES[c.tipo].nombre(c.registro)} (${CATEGORIA[c.tipo]})`),
       };
     }
 
-    const { tipo, registro } = resultado.empatados[0];
+    const { tipo, registro } = empatados[0];
     return {
       encontrado: true,
+      desde: i,
       tipo,
       categoria: CATEGORIA[tipo],
       nombre: FUENTES[tipo].nombre(registro),
@@ -142,5 +159,16 @@ export async function detectar(mensajes) {
     };
   }
 
-  return { encontrado: false, caidos: caidos.map((t) => CATEGORIA[t]) };
+  return { encontrado: false, caidos };
+}
+
+// Para revisar desde el navegador si el asistente alcanza los otros servicios
+export async function diagnostico() {
+  const urls = { pokemon: POKEMON_API_URL, onepiece: ONEPIECE_API_URL, docentes: DOCENTES_API_URL };
+  const resultado = {};
+  for (const [nombre, url] of Object.entries(urls)) {
+    const r = await pedirUnaVez(`${url}/health`);
+    resultado[nombre] = { url, responde: r.ok, status: r.status, ...(r.motivo ? { motivo: r.motivo } : {}) };
+  }
+  return resultado;
 }

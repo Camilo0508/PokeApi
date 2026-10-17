@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { responder } from './asistente.js';
+import { diagnostico } from './buscar.js';
 
 const app = express();
 app.use(cors());
@@ -30,6 +31,15 @@ function sanearMensajes(entrada) {
 
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', service: 'asistente' });
+});
+
+// Revisa si el asistente alcanza los otros tres servicios
+app.get('/diagnostico', async (req, res, next) => {
+  try {
+    res.json(await diagnostico());
+  } catch (err) {
+    next(err);
+  }
 });
 
 app.post('/chat', async (req, res, next) => {
