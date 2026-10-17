@@ -1,9 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
-import { buscar } from './buscar.js';
+import { detectar } from './buscar.js';
 
 const client = new Anthropic();
-
-const CATEGORIA = { pokemon: 'pokémon', onepiece: 'One Piece', docente: 'docentes' };
 
 const SISTEMA = `Eres el asistente de una aplicación de pokémon, personajes de One Piece y docentes.
 
@@ -20,24 +18,28 @@ Reglas:
    Separa por secciones con un emoji al inicio y usa "•" para las listas.
 8. Responde siempre en español, de forma amable y clara.`;
 
-export async function responder({ tipo, nombre, mensajes }) {
-  // 1. Buscar en la base de datos, sin IA
-  const resultado = await buscar(tipo, nombre);
+export async function responder(mensajes) {
+  // 1. El backend busca en el texto el nombre de un registro de las bases de datos, sin IA
+  const resultado = await detectar(mensajes);
 
-  if (resultado.error) {
-    return `El servicio de ${CATEGORIA[tipo]} no respondió. Intenta de nuevo en un momento.`;
+  // 2. Varios con el mismo nombre: se pide que sea más específico
+  if (resultado.varios) {
+    return `Encontré varios con ese nombre:\n${resultado.varios.map((n) => `• ${n}`).join('\n')}\n\n¿De cuál me hablas? Escribe el nombre completo.`;
   }
 
-  // 2. No existe: se responde aquí y Claude no se consulta
+  // 3. No existe: se responde aquí y Claude no se consulta
   if (!resultado.encontrado) {
-    return `"${nombre}" no está en nuestra base de datos de ${CATEGORIA[tipo]}.`;
+    const aviso = resultado.caidos.length
+      ? `\n\n(No pude revisar ${resultado.caidos.join(', ')}: el servicio no respondió, intenta de nuevo en un momento.)`
+      : '';
+    return `Ese personaje o persona no está en nuestra base de datos. Puedes preguntarme por los pokémon, los personajes de One Piece o los docentes que tenemos guardados.${aviso}`;
   }
 
-  // 3. Sí existe: Claude responde usando solo ese registro
+  // 4. Sí existe: Claude responde usando solo ese registro
   const final = await client.messages.create({
     model: 'claude-opus-5-5',
     max_tokens: 4000,
-    system: `${SISTEMA}\n\nREGISTRO (${CATEGORIA[tipo]}):\n${JSON.stringify(resultado.datos)}`,
+    system: `${SISTEMA}\n\nREGISTRO (${resultado.categoria}: ${resultado.nombre}):\n${JSON.stringify(resultado.datos)}`,
     messages: mensajes,
     output_config: { effort: 'medium' },
   });

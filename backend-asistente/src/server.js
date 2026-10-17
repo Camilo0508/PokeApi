@@ -7,7 +7,6 @@ app.use(cors());
 app.use(express.json({ limit: '100kb' }));
 
 const PORT = process.env.PORT || 8003;
-const TIPOS = ['pokemon', 'onepiece', 'docente'];
 
 function sanearMensajes(entrada) {
   if (!Array.isArray(entrada)) return [];
@@ -35,21 +34,12 @@ app.get('/health', (req, res) => {
 
 app.post('/chat', async (req, res, next) => {
   try {
-    const { tipo, nombre } = req.body ?? {};
-
-    if (!TIPOS.includes(tipo)) {
-      return res.status(400).json({ error: 'tipo debe ser pokemon, onepiece o docente' });
-    }
-    if (typeof nombre !== 'string' || !nombre.trim() || nombre.length > 100) {
-      return res.status(400).json({ error: 'Falta el nombre' });
-    }
-
-    const mensajes = sanearMensajes(req.body.mensajes);
+    const mensajes = sanearMensajes(req.body?.mensajes);
     if (!mensajes.length) {
       return res.status(400).json({ error: 'Debes enviar al menos una pregunta' });
     }
 
-    const respuesta = await responder({ tipo, nombre: nombre.trim(), mensajes });
+    const respuesta = await responder(mensajes);
     res.json({ respuesta });
   } catch (err) {
     next(err);
