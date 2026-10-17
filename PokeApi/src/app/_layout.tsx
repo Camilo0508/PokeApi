@@ -1,6 +1,6 @@
 import { useGlobalSearchParams, useRouter, type Href } from 'expo-router';
 import { Tabs } from 'expo-router/js-tabs';
-import { Pressable, Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import { CharacterProvider } from '@/context/character-context';
 import { DocenteProvider } from '@/context/docente-context';
@@ -33,17 +33,19 @@ function Pestanas() {
         headerStyle: { backgroundColor: colors.primary },
         headerTintColor: '#fff',
         tabBarActiveTintColor: colors.primary,
-        tabBarInactiveTintColor: colors.textSecondary,
-        tabBarStyle: { backgroundColor: colors.card },
-        headerRight: () => <BotonTema />,
+        tabBarInactiveTintColor: '#8E8E93',
+        tabBarStyle: { backgroundColor: colors.card, height: 64, paddingBottom: 8, paddingTop: 6 },
+        tabBarLabelStyle: { fontSize: 12, fontWeight: '600' },
+        headerRight: () => <Acciones />,
       }}>
+      {/* ===== Las 4 pestañas que se ven abajo ===== */}
       <Tabs.Screen
         name="index"
-        options={{ title: 'Pokédex', tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} /> }}
-      />
-      <Tabs.Screen
-        name="buscar"
-        options={{ title: 'Buscar', tabBarIcon: ({ focused }) => <TabIcon emoji="🔍" focused={focused} /> }}
+        options={{
+          title: 'Pokédex',
+          tabBarIcon: ({ focused }) => <TabIcon emoji="📋" focused={focused} />,
+          headerRight: () => <Acciones conBuscar />, // solo aquí aparece la lupa
+        }}
       />
       <Tabs.Screen
         name="onepiece"
@@ -54,10 +56,19 @@ function Pestanas() {
         options={{ title: 'Docentes', tabBarIcon: ({ focused }) => <TabIcon emoji="🎓" focused={focused} /> }}
       />
       <Tabs.Screen
-        name="estado"
-        options={{ title: 'Estado', tabBarIcon: ({ focused }) => <TabIcon emoji="📡" focused={focused} /> }}
+        name="asistente"
+        options={{ title: 'Asistente', tabBarIcon: ({ focused }) => <TabIcon emoji="🤖" focused={focused} /> }}
       />
-      {/* href: null la oculta de la barra: solo se llega con el botón de Buscar */}
+
+      {/* ===== Ocultas de la barra (href: null): se llega con botones ===== */}
+      <Tabs.Screen
+        name="buscar"
+        options={{ title: 'Buscar pokémon', href: null, headerLeft: () => <BotonVolver destino="/" /> }}
+      />
+      <Tabs.Screen
+        name="estado"
+        options={{ title: 'Estado', href: null, headerLeft: () => <BotonVolver destino="/" /> }}
+      />
       <Tabs.Screen
         name="habilidades"
         options={{ title: 'Información', href: null, headerLeft: () => <BotonVolver destino="/buscar" /> }}
@@ -79,12 +90,34 @@ function Pestanas() {
   );
 }
 
-// Botón que cambia el tema: al tocarlo se redibujan todas las pantallas
-function BotonTema() {
+// Botones de la barra superior: buscar (solo en Pokédex), estado y tema
+function Acciones({ conBuscar = false }: { conBuscar?: boolean }) {
+  const router = useRouter();
   const { tema, cambiarTema } = useTheme();
+
   return (
-    <Pressable onPress={cambiarTema} style={{ paddingHorizontal: 16 }}>
-      <Text style={{ fontSize: 18 }}>{tema === 'claro' ? '🌙' : '☀️'}</Text>
+    <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, paddingRight: 8 }}>
+      {conBuscar && <BotonIcono emoji="🔍" onPress={() => router.navigate('/buscar')} />}
+      <BotonIcono emoji="📡" onPress={() => router.navigate('/estado')} />
+      <BotonIcono emoji={tema === 'claro' ? '🌙' : '☀️'} onPress={cambiarTema} />
+    </View>
+  );
+}
+
+function BotonIcono({ emoji, onPress }: { emoji: string; onPress: () => void }) {
+  return (
+    <Pressable
+      onPress={onPress}
+      hitSlop={8}
+      style={({ pressed }) => ({
+        width: 38,
+        height: 38,
+        borderRadius: 19,
+        alignItems: 'center',
+        justifyContent: 'center',
+        backgroundColor: pressed ? 'rgba(255,255,255,0.25)' : 'rgba(255,255,255,0.12)',
+      })}>
+      <Text style={{ fontSize: 18 }}>{emoji}</Text>
     </Pressable>
   );
 }
@@ -108,5 +141,5 @@ function BotonVolverFormulario() {
 }
 
 function TabIcon({ emoji, focused }: { emoji: string; focused: boolean }) {
-  return <Text style={{ fontSize: 20, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>;
+  return <Text style={{ fontSize: 22, opacity: focused ? 1 : 0.5 }}>{emoji}</Text>;
 }
