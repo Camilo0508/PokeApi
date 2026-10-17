@@ -7,9 +7,10 @@ export interface Docente {
   facultad: string | null;
   cargo: string | null;
   correo: string | null;
-  experiencia: number | null; // años
-  resumen: string | null;     // texto largo, se ve en "Ver más"
+  experiencia: number | null; 
+  resumen: string | null;     
   foto: string | null;
+  nuevo?: number; // Dolo exuite en sqlite1 : todo menos el id y la bandera local
 }
 
 export interface DocenteListResponse {

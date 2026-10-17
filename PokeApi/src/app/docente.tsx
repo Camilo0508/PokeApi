@@ -19,9 +19,6 @@ export default function DocenteScreen() {
   const { colors } = useTheme();
   const router = useRouter();
 
-  // ...y además se pide la ficha completa al microservicio (GET /docentes/{id}).
-  // Cada respuesta se guarda junto con el docente que la pidió ("de"): así, si
-  // se elige otro o se edita, no se muestra por error la ficha anterior.
   const [detalle, setDetalle] = useState<{ de: Docente; docente: Docente } | null>(null);
   const [fallo, setFallo] = useState<{ de: Docente; mensaje: string } | null>(null);
   const [borrando, setBorrando] = useState(false);
@@ -47,7 +44,7 @@ export default function DocenteScreen() {
     };
   }, [selected]);
 
-  // ---------- CRUD ----------
+  // CRUD
 
   function editar(actual: Docente) {
     router.push({ pathname: '/docente-form', params: { id: String(actual.id) } });

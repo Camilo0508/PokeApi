@@ -5,11 +5,11 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useRouter } from 'expo-router';
 
 import { ErrorMessage } from '@/components/error-message';
-import { useDocente } from '@/context/docente-context';
 import { useTheme } from '@/context/theme-context';
-import { eliminarDocente, getDocentes } from '@/services/docente-offline';
 import { Docente } from '@/types/docente';
 import { confirmar } from '@/utils/confirmar';
+import { INTERVALOS, useDocente } from '@/context/docente-context';
+import { eliminarDocente, getDocentes, marcarVisto } from '@/services/docente-offline';
 
 const AZUL = '#2563EB'; // el color institucional de esta sección
 const ROJO = '#DC2626'; // para eliminar
@@ -17,7 +17,8 @@ const ROJO = '#DC2626'; // para eliminar
 export default function DocentesScreen() {
   const { colors } = useTheme();
   const router = useRouter();
-  const { selectDocente, version, recargar, pendientes } = useDocente();
+  const { selectDocente, version, recargar, pendientes, nuevos, fusionados, cerrarFusionados, intervalo, cambiarIntervalo } =
+  useDocente();
 
   const [query, setQuery] = useState('');
   const [buscado, setBuscado] = useState('');
@@ -52,7 +53,7 @@ export default function DocentesScreen() {
   }
 
   function verMas(docente: Docente) {
-    selectDocente(docente); // viaja por Context a la pantalla de detalle
+    selectDocente(docente); 
     router.push('./docente');
   }
 
@@ -137,6 +138,37 @@ export default function DocentesScreen() {
           📴 {pendientes} cambio(s) guardado(s) en el teléfono. Se enviarán cuando el servidor vuelva.
         </Text>
       )}
+      {/* Cada cuánto se revisa la nube */}
+      <View style={styles.filaIntervalo}>
+        <Text style={[styles.dato, { color: colors.textSecondary }]}>🔄 Revisar la nube cada:</Text>
+        {INTERVALOS.map((s) => (
+          <Pressable
+            key={s}
+            onPress={() => cambiarIntervalo(s)}
+            style={[styles.chip, { borderColor: AZUL }, intervalo === s && { backgroundColor: AZUL }]}>
+            <Text style={{ color: intervalo === s ? '#fff' : AZUL, fontWeight: '700' }}>{s}s</Text>
+          </Pressable>
+        ))}
+      </View>
+
+      {/* Inserciones hechas en la nube */}
+      {nuevos > 0 && (
+        <Pressable onPress={() => marcarVisto().then(recargar)} style={[styles.aviso, { backgroundColor: '#16A34A33' }]}>
+          <Text style={{ color: colors.text }}>
+            🆕 Se {nuevos === 1 ? 'insertó 1 docente nuevo' : `insertaron ${nuevos} docentes nuevos`} en la nube.
+            Toca para marcarlos como vistos.
+          </Text>
+        </Pressable>
+      )}
+
+      {/* Conflicto resuelto: el mismo docente estaba en la nube y en el teléfono */}
+      {fusionados > 0 && (
+        <Pressable onPress={cerrarFusionados} style={[styles.aviso, { backgroundColor: '#7C3AED33' }]}>
+          <Text style={{ color: colors.text }}>
+            🔗 {fusionados} docente(s) que creaste sin conexión ya existían en la nube: se dejó uno solo. Toca para cerrar.
+          </Text>
+        </Pressable>
+      )}
 
       {error && <ErrorMessage message={error} onRetry={buscar} />}
 
@@ -170,9 +202,12 @@ export default function DocentesScreen() {
                 <Image source={item.foto} style={styles.foto} contentFit="cover" cachePolicy="disk" />
               ) : (
                 <View style={[styles.inicial, { backgroundColor: AZUL + '26', borderColor: AZUL + '55' }]}>
-                  <Text style={[styles.inicialTexto, { color: AZUL }]}>
-                    {item.nombre.charAt(0).toUpperCase()}
-                  </Text>
+                    <View style={styles.filaNombre}>
+                      <Text style={[styles.nombre, { color: colors.text, flexShrink: 1 }]} numberOfLines={1}>
+                        {item.nombre}
+                      </Text>
+                      {item.nuevo === 1 && <Text style={styles.nuevo}>NUEVO</Text>}
+                  </View>
                 </View>
               )}
 
@@ -321,4 +356,11 @@ const styles = StyleSheet.create({
   loader: { margin: 24 },
   pie: { textAlign: 'center', fontSize: 11, marginVertical: 14 },
   vacio: { textAlign: 'center', marginTop: 30, fontSize: 13 },
+  filaIntervalo: { flexDirection: 'row', alignItems: 'center', gap: 8, marginHorizontal: 16, marginBottom: 8 },
+  chip: { borderWidth: 1.5, borderRadius: 999, paddingHorizontal: 12, paddingVertical: 4 },
+  filaNombre: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  nuevo: {
+    backgroundColor: '#16A34A', color: '#fff', fontSize: 10, fontWeight: '800',
+    paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6, overflow: 'hidden',
+  },
 });
