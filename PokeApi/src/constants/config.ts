@@ -28,4 +28,4 @@ function resolverApiUrl(port: number, urlDeProduccion?: string) {
 export const API_URL = resolverApiUrl(PORT_POKEMON, process.env.EXPO_PUBLIC_API_URL);
 export const ONEPIECE_API_URL = resolverApiUrl(PORT_ONEPIECE, process.env.EXPO_PUBLIC_ONEPIECE_API_URL);
 export const DOCENTES_API_URL = resolverApiUrl(PORT_DOCENTES, process.env.EXPO_PUBLIC_DOCENTES_API_URL);
-export const ASISTENTE_API_URL = resolverApiUrl(PORT_ASISTENTE, process.env.EXPO_PUBLIC_ASISTENTE_API_URL);
+export const ASISTENTE_API_URL = resolverApiUrl(PORT_ASISTENTE, process.env.EXPO_PUBLIC_ASISTENTE_API_URL); 
