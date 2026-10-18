@@ -50,20 +50,21 @@ const FUENTES = {
 
 const CATEGORIA = { pokemon: 'pokémon', onepiece: 'personaje de One Piece', docente: 'docente' };
 
-// Se guarda la lista 2 minutos para no pedirla en cada pregunta
-const DURACION_CACHE = 2 * 60 * 1000;
+// Las listas se guardan 10 minutos en memoria: así la mayoría de preguntas no esperan a las bases de datos
+const DURACION_CACHE = 10 * 60 * 1000;
 const cache = {};
 
-async function listarTodos(tipo) {
+async function listarTodos(tipo, forzar = false) {
   const guardado = cache[tipo];
-  if (guardado && Date.now() - guardado.hora < DURACION_CACHE) return guardado.registros;
+  if (!forzar && guardado && Date.now() - guardado.hora < DURACION_CACHE) return guardado.registros;
 
   const fuente = FUENTES[tipo];
   const registros = [];
   for (let i = 0; i < 20; i++) {
     const r = await pedir(fuente.pagina(i));
     if (!r.ok) {
-      if (i === 0) return null; // el servicio no respondió
+      // El servicio no respondió: mejor la lista anterior que nada
+      if (i === 0) return guardado?.registros ?? null;
       break;
     }
     const pagina = r.data?.results ?? [];
@@ -94,9 +95,9 @@ function puntaje(texto, nombre) {
 }
 
 // Trae las listas de las tres bases de datos (una sola vez por pregunta)
-async function traerListas() {
+async function traerListas(forzar = false) {
   const tipos = Object.keys(FUENTES);
-  const listas = await Promise.all(tipos.map(listarTodos));
+  const listas = await Promise.all(tipos.map((tipo) => listarTodos(tipo, forzar)));
   return {
     listas: tipos.map((tipo, i) => ({ tipo, registros: listas[i] ?? [] })),
     caidos: tipos.filter((_, i) => listas[i] === null).map((t) => CATEGORIA[t]),
@@ -127,8 +128,8 @@ const PIDE_ALGUIEN = /\b(quien es|quien era|que sabes de|hablame de|cuentame de|
  * Devuelve también "desde": la posición del mensaje donde se nombró, para que a la IA
  * solo le llegue la conversación sobre ese registro y no se mezcle con los anteriores.
  */
-export async function detectar(mensajes) {
-  const { listas, caidos } = await traerListas();
+export async function detectar(mensajes, forzar = false) {
+  const { listas, caidos } = await traerListas(forzar);
 
   const ultimo = mensajes.length - 1;
   const ultimoTexto = normalizar(mensajes[ultimo]?.content);
@@ -159,7 +160,17 @@ export async function detectar(mensajes) {
     };
   }
 
+  // Puede que lo hayan guardado hace poco y la lista en memoria sea vieja: se revisa una vez con datos frescos
+  if (!forzar && caidos.length === 0) return detectar(mensajes, true);
   return { encontrado: false, caidos };
+}
+
+// Carga las tres listas en segundo plano (al arrancar y cada 9 minutos),
+// para que las preguntas encuentren todo listo en memoria
+export async function precargar() {
+  const inicio = Date.now();
+  const { caidos } = await traerListas(true);
+  console.log(`Listas precargadas en ${Date.now() - inicio} ms${caidos.length ? ` (sin respuesta: ${caidos.join(', ')})` : ''}`);
 }
 
 // Para revisar desde el navegador si el asistente alcanza los otros servicios

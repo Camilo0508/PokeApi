@@ -71,7 +71,7 @@ export async function responder(mensajes) {
       system: `${SISTEMA}\n\nREGISTRO (${resultado.categoria}: ${resultado.nombre}):\n${JSON.stringify(resultado.datos)}`,
       // Solo la conversación sobre este registro, para que no se mezcle con temas anteriores
       messages: mensajes.slice(resultado.desde),
-      output_config: { effort: 'medium' },
+      output_config: { effort: 'low' }, // un chat no necesita pensar mucho: responde más rápido
     });
   } catch (err) {
     console.error('Error de la API de Claude:', err.status, err.message);

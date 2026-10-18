@@ -1,7 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import { responder } from './asistente.js';
-import { diagnostico } from './buscar.js';
+import { diagnostico, precargar } from './buscar.js';
 
 const app = express();
 app.use(cors());
@@ -63,4 +63,7 @@ app.use((err, req, res, next) => {
 
 app.listen(PORT, () => {
   console.log(`Asistente escuchando en http://localhost:${PORT}`);
+  // Deja las listas en memoria desde el arranque y las renueva antes de que venzan
+  precargar();
+  setInterval(precargar, 9 * 60 * 1000);
 });
