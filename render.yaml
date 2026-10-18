@@ -62,7 +62,12 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      # Secreta: se escribe a mano en el panel de Render
+      # Qué IA responde: gemini (gratis, por defecto) o claude
+      - key: IA_PROVEEDOR
+        value: gemini
+      # Secretas: se escriben a mano en el panel de Render
+      - key: GEMINI_API_KEY
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: POKEMON_API_URL

@@ -2,6 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { responder } from './asistente.js';
 import { diagnostico, precargar } from './buscar.js';
+import { IA_PROVEEDOR } from './config.js';
 
 const app = express();
 app.use(cors());
@@ -30,7 +31,7 @@ function sanearMensajes(entrada) {
 }
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'asistente' });
+  res.json({ status: 'ok', service: 'asistente', ia: IA_PROVEEDOR });
 });
 
 // Revisa si el asistente alcanza los otros tres servicios
