@@ -19,7 +19,7 @@ function explicarError(err) {
   return `⚠️ La IA no pudo responder (${err?.status ?? 'sin conexión'}): ${err?.message ?? 'error desconocido'}`;
 }
 
-export async function preguntarClaude(sistema, mensajes) {
+export async function preguntarClaude(sistema, mensajes, esperaMs) {
   if (!process.env.ANTHROPIC_API_KEY) return explicarError({ status: 401 });
 
   let final;
@@ -31,8 +31,11 @@ export async function preguntarClaude(sistema, mensajes) {
       system: sistema,
       messages: mensajes,
       output_config: { effort: 'low' }, // un chat no necesita pensar mucho: responde más rápido
-    });
+    }, { timeout: esperaMs, maxRetries: 0 });
   } catch (err) {
+    if (err instanceof Anthropic.APIConnectionTimeoutError) {
+      return '⏳ Claude no respondió a tiempo. Prueba con un tiempo de espera mayor.';
+    }
     console.error('Error de la API de Claude:', err.status, err.message);
     return explicarError(err);
   }

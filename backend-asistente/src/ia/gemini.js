@@ -14,7 +14,7 @@ function explicarError(status, mensaje) {
   return `⚠️ Gemini no pudo responder (${status || 'sin conexión'}): ${mensaje ?? 'error desconocido'}`;
 }
 
-export async function preguntarGemini(sistema, mensajes) {
+export async function preguntarGemini(sistema, mensajes, esperaMs) {
   if (!process.env.GEMINI_API_KEY) return explicarError(401, 'api key');
 
   let res;
@@ -31,9 +31,10 @@ export async function preguntarGemini(sistema, mensajes) {
         })),
         generationConfig: { maxOutputTokens: 8192 },
       }),
-      signal: AbortSignal.timeout(60000),
+      signal: AbortSignal.timeout(esperaMs),
     });
   } catch (err) {
+    if (err.name === 'TimeoutError') return '⏳ Gemini no respondió a tiempo. Prueba con un tiempo de espera mayor.';
     console.error('Error de conexión con Gemini:', err.message);
     return explicarError(0, err.message);
   }

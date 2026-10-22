@@ -1,10 +1,5 @@
 import { detectar } from './buscar.js';
-import { IA_PROVEEDOR } from './config.js';
-import { preguntarClaude } from './ia/claude.js';
-import { preguntarGemini } from './ia/gemini.js';
-
-// Cada IA en su archivo; cuál se usa lo decide IA_PROVEEDOR
-const IAS = { gemini: preguntarGemini, claude: preguntarClaude };
+import { elegirIa } from './ia/index.js';
 
 const SISTEMA = `Eres el asistente de una aplicación de pokémon, personajes de One Piece y docentes.
 El backend ya comprobó que el registro de abajo SÍ existe en nuestra base de datos.
@@ -29,7 +24,12 @@ Reglas:
    Separa por secciones con un emoji al inicio y usa "•" para las listas.
 9. Responde siempre en español, de forma amable y clara.`;
 
-export async function responder(mensajes) {
+/**
+ * @param mensajes la conversación
+ * @param opciones.ia la IA que escogió la app (groq, gemini, claude, openai, deepseek)
+ * @param opciones.esperaMs cuánto espera la app; la IA debe terminar antes
+ */
+export async function responder(mensajes, { ia, esperaMs }) {
   // 1. El backend busca en el texto el nombre de un registro de las bases de datos, sin IA
   const resultado = await detectar(mensajes);
 
@@ -53,6 +53,7 @@ export async function responder(mensajes) {
   const sistema = `${SISTEMA}\n\nREGISTRO (${resultado.categoria}: ${resultado.nombre}):\n${JSON.stringify(resultado.datos)}`;
   // Solo la conversación sobre este registro, para que no se mezcle con temas anteriores
   const conversacion = mensajes.slice(resultado.desde);
-  const preguntarIa = IAS[IA_PROVEEDOR] ?? preguntarGemini;
-  return preguntarIa(sistema, conversacion);
+  const elegida = elegirIa(ia);
+  console.log(`Pregunta sobre ${resultado.nombre} con ${elegida.nombre}`);
+  return elegida.preguntar(sistema, conversacion, esperaMs);
 }

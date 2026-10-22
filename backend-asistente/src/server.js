@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import { responder } from './asistente.js';
 import { diagnostico, precargar } from './buscar.js';
-import { IA_PROVEEDOR } from './config.js';
+import { IA_POR_DEFECTO, listarIas } from './ia/index.js';
 
 const app = express();
 app.use(cors());
@@ -31,7 +31,12 @@ function sanearMensajes(entrada) {
 }
 
 app.get('/health', (req, res) => {
-  res.json({ status: 'ok', service: 'asistente', ia: IA_PROVEEDOR });
+  res.json({ status: 'ok', service: 'asistente', ia: IA_POR_DEFECTO });
+});
+
+// La app pide esta lista para mostrar con qué IA se puede hablar
+app.get('/ias', (req, res) => {
+  res.json({ porDefecto: IA_POR_DEFECTO, ias: listarIas() });
 });
 
 // Revisa si el asistente alcanza los otros tres servicios
@@ -50,7 +55,14 @@ app.post('/chat', async (req, res, next) => {
       return res.status(400).json({ error: 'Debes enviar al menos una pregunta' });
     }
 
-    const respuesta = await responder(mensajes);
+    // Tiempo de espera que eligió la app (20, 40, 80 o 160 s). La IA debe terminar un poco
+    // antes, para que el backend alcance a contestar aunque sea con un aviso.
+    const espera = Number(req.body?.espera);
+    const esperaSeg = Number.isFinite(espera) ? Math.min(Math.max(espera, 5), 160) : 40;
+    const esperaMs = Math.max(esperaSeg * 1000 - 3000, 3000);
+
+    const ia = typeof req.body?.ia === 'string' ? req.body.ia : undefined;
+    const respuesta = await responder(mensajes, { ia, esperaMs });
     res.json({ respuesta });
   } catch (err) {
     next(err);

@@ -3,14 +3,11 @@ export const POKEMON_API_URL = process.env.POKEMON_API_URL ?? 'http://localhost:
 export const ONEPIECE_API_URL = process.env.ONEPIECE_API_URL ?? 'http://localhost:8001';
 export const DOCENTES_API_URL = process.env.DOCENTES_API_URL ?? 'http://localhost:8002';
 
-// Qué IA responde: "gemini" (por defecto, gratis) o "claude". Se cambia con IA_PROVEEDOR en el .env o en Render
-export const IA_PROVEEDOR = (process.env.IA_PROVEEDOR ?? 'gemini').trim().toLowerCase();
+// IA que se usa cuando la app no elige ninguna: groq, gemini, claude, openai o deepseek
+export const IA_PROVEEDOR = (process.env.IA_PROVEEDOR ?? 'groq').trim().toLowerCase();
+
+// Modelos de cada IA (se pueden cambiar en el .env o en Render sin tocar código)
+export const GROQ_MODEL = process.env.GROQ_MODEL ?? 'llama-3.3-70b-versatile';
 export const GEMINI_MODEL = process.env.GEMINI_MODEL ?? 'gemini-flash-latest';
-
-const CLAVES = { gemini: 'GEMINI_API_KEY', claude: 'ANTHROPIC_API_KEY' };
-
-if (!CLAVES[IA_PROVEEDOR]) {
-  console.warn(`⚠️  IA_PROVEEDOR="${IA_PROVEEDOR}" no existe: usa "gemini" o "claude".`);
-} else if (!process.env[CLAVES[IA_PROVEEDOR]]) {
-  console.warn(`⚠️  Falta ${CLAVES[IA_PROVEEDOR]}: el asistente no podrá responder con ${IA_PROVEEDOR}.`);
-}
+export const OPENAI_MODEL = process.env.OPENAI_MODEL ?? 'gpt-4o-mini';
+export const DEEPSEEK_MODEL = process.env.DEEPSEEK_MODEL ?? 'deepseek-chat';
