@@ -62,7 +62,7 @@ services:
     buildCommand: npm install
     startCommand: npm start
     envVars:
-      # IA por defecto (la app puede escoger otra): groq, gemini, openai, deepseek o claude
+      # IA por defecto (la app puede escoger otra): groq, gemini o claude
       - key: IA_PROVEEDOR
         value: groq
       # Secretas: se escriben a mano en el panel de Render (solo las de las IAs que se usen)

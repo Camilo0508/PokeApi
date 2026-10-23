@@ -1,4 +1,4 @@
-import { DEEPSEEK_MODEL, GROQ_MODEL, IA_PROVEEDOR, OPENAI_MODEL } from '../config.js';
+import { GROQ_MODEL, IA_PROVEEDOR } from '../config.js';
 import { preguntarClaude } from './claude.js';
 import { crearProveedorCompatible } from './compatible-openai.js';
 import { preguntarGemini } from './gemini.js';
@@ -17,26 +17,6 @@ const PROVEEDORES = {
     }),
   },
   gemini: { nombre: 'Gemini', variableClave: 'GEMINI_API_KEY', preguntar: preguntarGemini },
-  openai: {
-    nombre: 'OpenAI',
-    variableClave: 'OPENAI_API_KEY',
-    preguntar: crearProveedorCompatible({
-      nombre: 'OpenAI',
-      url: 'https://api.openai.com/v1/chat/completions',
-      variableClave: 'OPENAI_API_KEY',
-      modelo: OPENAI_MODEL,
-    }),
-  },
-  deepseek: {
-    nombre: 'DeepSeek',
-    variableClave: 'DEEPSEEK_API_KEY',
-    preguntar: crearProveedorCompatible({
-      nombre: 'DeepSeek',
-      url: 'https://api.deepseek.com/chat/completions',
-      variableClave: 'DEEPSEEK_API_KEY',
-      modelo: DEEPSEEK_MODEL,
-    }),
-  },
   claude: { nombre: 'Claude', variableClave: 'ANTHROPIC_API_KEY', preguntar: preguntarClaude },
 };
 

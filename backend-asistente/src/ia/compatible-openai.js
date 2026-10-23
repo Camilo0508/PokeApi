@@ -1,5 +1,5 @@
-// Groq, OpenAI y DeepSeek usan el mismo formato de API ("chat completions"),
-// así que una sola función sirve para las tres: solo cambia la URL, la clave y el modelo.
+// Groq usa el formato de API "chat completions" (el mismo de OpenAI); esta función sirve
+// para cualquier IA con ese formato: solo cambia la URL, la clave y el modelo.
 export function crearProveedorCompatible({ nombre, url, variableClave, modelo }) {
   // Modelo que se está usando; cambia solo si el configurado deja de existir
   let modeloEnUso = modelo;

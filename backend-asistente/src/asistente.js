@@ -26,7 +26,7 @@ Reglas:
 
 /**
  * @param mensajes la conversación
- * @param opciones.ia la IA que escogió la app (groq, gemini, claude, openai, deepseek)
+ * @param opciones.ia la IA que escogió la app (groq, gemini o claude)
  * @param opciones.esperaMs cuánto espera la app; la IA debe terminar antes
  */
 export async function responder(mensajes, { ia, esperaMs }) {

@@ -8,6 +8,10 @@ import { DocenteProvider } from '@/context/docente-context';
 import { PokemonProvider } from '@/context/pokemon-context';
 import { ThemeProvider, useTheme } from '@/context/theme-context';
 
+// Pantallas que no salen en la barra de abajo pero a las que sí se puede navegar.
+// (Desde expo-router 58, "href: null" las vuelve inaccesibles y redirige a la primera pestaña.)
+const OCULTA = { tabBarButton: () => null, tabBarItemStyle: { display: 'none' as const } };
+
 // Layout: los dos Providers van por fuera de las pestañas para que todas los vean
 export default function TabLayout() {
   return (
@@ -69,31 +73,31 @@ function Pestanas() {
         options={{ title: 'Asistente', tabBarIcon: ({ focused }) => <TabIcon emoji="🤖" focused={focused} /> }}
       />
 
-      {/* ===== Ocultas de la barra (href: null): se llega con botones ===== */}
+      {/* ===== Ocultas de la barra (OCULTA): se llega con botones ===== */}
       <Tabs.Screen
         name="buscar"
-        options={{ title: 'Buscar pokémon', href: null, headerLeft: () => <BotonVolver destino="/" /> }}
+        options={{ title: 'Buscar pokémon', ...OCULTA, headerLeft: () => <BotonVolver destino="/" /> }}
       />
       <Tabs.Screen
         name="estado"
-        options={{ title: 'Estado', href: null, headerLeft: () => <BotonVolver destino="/" /> }}
+        options={{ title: 'Estado', ...OCULTA, headerLeft: () => <BotonVolver destino="/" /> }}
       />
       <Tabs.Screen
         name="habilidades"
-        options={{ title: 'Información', href: null, headerLeft: () => <BotonVolver destino="/buscar" /> }}
+        options={{ title: 'Información', ...OCULTA, headerLeft: () => <BotonVolver destino="/buscar" /> }}
       />
       <Tabs.Screen
         name="personaje"
-        options={{ title: 'Personaje', href: null, headerLeft: () => <BotonVolver destino="/onepiece" /> }}
+        options={{ title: 'Personaje', ...OCULTA, headerLeft: () => <BotonVolver destino="/onepiece" /> }}
       />
       <Tabs.Screen
         name="docente"
-        options={{ title: 'Docente', href: null, headerLeft: () => <BotonVolver destino="/docentes" /> }}
+        options={{ title: 'Docente', ...OCULTA, headerLeft: () => <BotonVolver destino="/docentes" /> }}
       />
       {/* Formulario para crear o editar un docente */}
       <Tabs.Screen
         name="docente-form"
-        options={{ title: 'Docente', href: null, headerLeft: () => <BotonVolverFormulario /> }}
+        options={{ title: 'Docente', ...OCULTA, headerLeft: () => <BotonVolverFormulario /> }}
       />
     </Tabs>
   );
