@@ -313,7 +313,7 @@ export default function AsistenteScreen() {
             >
               <ActivityIndicator color={ACENTO} />
             </View>
-          ) : null
+          ) : undefined
         }
       />
 

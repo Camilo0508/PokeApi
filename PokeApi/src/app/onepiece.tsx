@@ -170,7 +170,7 @@ export default function OnePieceScreen() {
         contentContainerStyle={styles.list}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
-        ListEmptyComponent={!loading && !error ? <Vacio buscado={buscado} onReset={limpiar} /> : null}
+        ListEmptyComponent={!loading && !error ? <Vacio buscado={buscado} onReset={limpiar} /> : undefined}
         ListFooterComponent={
           loading ? (
             <ActivityIndicator style={styles.loader} color={colors.primary} />
@@ -178,7 +178,7 @@ export default function OnePieceScreen() {
             <Text style={[styles.pie, { color: colors.textSecondary }]}>
               {visibles.length} de {characters.length} personajes · base de datos
             </Text>
-          ) : null
+          ) : undefined
         }
         renderItem={({ item }) => (
           <Pressable

@@ -183,7 +183,7 @@ export default function DocentesScreen() {
                 ? `"${buscado}" no está en la base de datos`
                 : 'Todavía no hay docentes registrados'}
             </Text>
-          ) : null
+          ) : undefined
         }
         ListFooterComponent={
           loading ? (
@@ -192,7 +192,7 @@ export default function DocentesScreen() {
             <Text style={[styles.pie, { color: colors.textSecondary }]}>
               {docentes.length} {docentes.length === 1 ? 'docente' : 'docentes'} · base de datos
             </Text>
-          ) : null
+          ) : undefined
         }
         renderItem={({ item }) => (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border }]}>
