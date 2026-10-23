@@ -101,6 +101,8 @@ async function traerListas(forzar = false) {
   return {
     listas: tipos.map((tipo, i) => ({ tipo, registros: listas[i] ?? [] })),
     caidos: tipos.filter((_, i) => listas[i] === null).map((t) => CATEGORIA[t]),
+    // Respondieron pero sin ningún registro: casi siempre es una URL que apunta a otra base
+    vacias: tipos.filter((_, i) => listas[i]?.length === 0).map((t) => CATEGORIA[t]),
   };
 }
 
@@ -129,7 +131,7 @@ const PIDE_ALGUIEN = /\b(quien es|quien era|que sabes de|hablame de|cuentame de|
  * solo le llegue la conversación sobre ese registro y no se mezcle con los anteriores.
  */
 export async function detectar(mensajes, forzar = false) {
-  const { listas, caidos } = await traerListas(forzar);
+  const { listas, caidos, vacias } = await traerListas(forzar);
 
   const ultimo = mensajes.length - 1;
   const ultimoTexto = normalizar(mensajes[ultimo]?.content);
@@ -162,24 +164,34 @@ export async function detectar(mensajes, forzar = false) {
 
   // Puede que lo hayan guardado hace poco y la lista en memoria sea vieja: se revisa una vez con datos frescos
   if (!forzar && caidos.length === 0) return detectar(mensajes, true);
-  return { encontrado: false, caidos };
+  return { encontrado: false, caidos, vacias };
 }
 
 // Carga las tres listas en segundo plano (al arrancar y cada 9 minutos),
 // para que las preguntas encuentren todo listo en memoria
 export async function precargar() {
   const inicio = Date.now();
-  const { caidos } = await traerListas(true);
-  console.log(`Listas precargadas en ${Date.now() - inicio} ms${caidos.length ? ` (sin respuesta: ${caidos.join(', ')})` : ''}`);
+  const { listas, caidos } = await traerListas(true);
+  const conteo = listas.map((l) => `${l.tipo}: ${l.registros.length}`).join(', ');
+  console.log(`Listas precargadas en ${Date.now() - inicio} ms (${conteo})${caidos.length ? ` · sin respuesta: ${caidos.join(', ')}` : ''}`);
 }
 
 // Para revisar desde el navegador si el asistente alcanza los otros servicios
 export async function diagnostico() {
-  const urls = { pokemon: POKEMON_API_URL, onepiece: ONEPIECE_API_URL, docentes: DOCENTES_API_URL };
+  const urls = { pokemon: POKEMON_API_URL, onepiece: ONEPIECE_API_URL, docente: DOCENTES_API_URL };
   const resultado = {};
-  for (const [nombre, url] of Object.entries(urls)) {
+  for (const [tipo, url] of Object.entries(urls)) {
     const r = await pedirUnaVez(`${url}/health`);
-    resultado[nombre] = { url, responde: r.ok, status: r.status, ...(r.motivo ? { motivo: r.motivo } : {}) };
+    const registros = (await listarTodos(tipo)) ?? [];
+    resultado[tipo] = {
+      url,
+      responde: r.ok,
+      status: r.status,
+      ...(r.motivo ? { motivo: r.motivo } : {}),
+      // Cuántos registros lee el asistente de esa base y algunos nombres, para comprobar que es la correcta
+      registros: registros.length,
+      ejemplos: registros.slice(0, 5).map((x) => FUENTES[tipo].nombre(x)),
+    };
   }
   return resultado;
 }

@@ -43,9 +43,12 @@ export async function responder(mensajes, { ia, esperaMs }) {
     if (resultado.caidos.length === 3) {
       return '⏳ No pude conectarme con las bases de datos (pokémon, One Piece y docentes). Si están en Render pueden estar despertando: intenta de nuevo en un minuto.';
     }
-    const aviso = resultado.caidos.length
+    let aviso = resultado.caidos.length
       ? `\n\n(No pude revisar ${resultado.caidos.join(' ni ')}: el servicio no respondió, intenta de nuevo en un momento.)`
       : '';
+    if (resultado.vacias?.length) {
+      aviso += `\n\n(El servicio de ${resultado.vacias.join(' y ')} respondió sin ningún registro: revisa su URL en el asistente.)`;
+    }
     return `Ese personaje o persona no está en nuestra base de datos. Puedes preguntarme por los pokémon, los personajes de One Piece o los docentes que tenemos guardados.${aviso}`;
   }
 
